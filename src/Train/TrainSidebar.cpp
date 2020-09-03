@@ -235,6 +235,11 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     workoutTree->verticalScrollBar()->setStyle(xde);
 #endif
 
+	workoutFilter = new QLineEdit();
+	workoutFilter->setClearButtonEnabled(true);
+	workoutFilter->setPlaceholderText(tr("Filter..."));
+	connect(workoutFilter, SIGNAL(textChanged(const QString&)), this, SLOT(workoutFilterChanged(const QString&)));
+
     connect(context, SIGNAL(newLap()), this, SLOT(resetLapTimer()));
     connect(context, SIGNAL(viewChanged(int)), this, SLOT(viewChanged(int)));
 
@@ -260,10 +265,10 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
 
     deviceItem->addWidget(deviceTree);
     trainSplitter->addWidget(deviceItem);
+    workoutItem->addWidget(workoutFilter);
     workoutItem->addWidget(workoutTree);
     trainSplitter->addWidget(workoutItem);
     cl->addWidget(trainSplitter);
-
 
 #if !defined GC_VIDEO_NONE
     mediaItem = new GcSplitterItem(tr("Media"), iconFromPNG(":images/sidebar/movie.png"), this);
@@ -2378,6 +2383,12 @@ void TrainSidebar::updateCalibration()
         // set notification text, no timeout
         emit setNotification(status, 0);
     }
+}
+
+void TrainSidebar::workoutFilterChanged(const QString &text)
+{
+    sortModel->setFilterRegExp(QRegExp(text, Qt::CaseInsensitive, QRegExp::FixedString));
+    sortModel->setFilterKeyColumn(1);
 }
 
 void TrainSidebar::FFwd()

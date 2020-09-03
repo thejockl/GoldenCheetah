@@ -194,6 +194,8 @@ class TrainSidebar : public GcWindow
         void toggleCalibration();
         void updateCalibration();
 
+        void workoutFilterChanged(const QString &text);
+
         // Timed actions
         void guiUpdate();           // refreshes the telemetry
         void diskUpdate();          // writes to CSV file
@@ -233,6 +235,7 @@ class TrainSidebar : public GcWindow
 
         DeviceTreeView *deviceTree;
         QTreeView *workoutTree;
+        QLineEdit *workoutFilter;
         QTreeView *videosyncTree;
         QTreeView *mediaTree;
         QSortFilterProxyModel *sortModel;  // sorting workout list
