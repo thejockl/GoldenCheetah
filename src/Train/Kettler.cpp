@@ -97,12 +97,22 @@ bool Kettler::discover(QString portName)
         sp.write("ID\r\n");
         sp.waitForBytesWritten(500);
 
-        QByteArray reply = sp.readAll();
-
+        QByteArray reply;
+        for (int i = 0; i < 15; ++i)
+        {
+            if (sp.waitForReadyRead(500))
+            {
+                reply.append(sp.readAll());
+                if (reply.contains("\r\n"))
+                {
+                    break;
+                }
+            }
+        }
         reply.append('\0');
 
         QString replyString(reply);
-        if (replyString.startsWith("ACK") || replyString.startsWith("RUN"))
+        if (replyString.startsWith("AR1S") || replyString.startsWith("ACK") || replyString.startsWith("RUN"))
         {
             found = true;
         }

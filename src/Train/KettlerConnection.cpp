@@ -174,7 +174,7 @@ void KettlerConnection::requestAll()
 
     if ((m_loadToWrite != m_load))
     {
-        QString cmd = QString("pw %1\r\n").arg(m_loadToWrite);
+        QString cmd = QString("PW %1\r\n").arg(m_loadToWrite);
         m_serial->write(cmd.toStdString().c_str());
         if (!m_serial->waitForBytesWritten(500))
         {
@@ -202,7 +202,7 @@ void KettlerConnection::initializePcConnection()
         keepTrying = (--maxRetries != 0);
 
         // Set kettler into PC-mode, reply should be ACK or RUN
-        m_serial->write("cd\r\n");
+        m_serial->write("CD\r\n");
 
         if (!m_serial->waitForBytesWritten(500))
         {
