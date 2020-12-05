@@ -185,10 +185,12 @@ class TrainSidebar : public GcWindow
         void FFwd();        // jump forward when in a workout
         void Rewind();      // jump backwards when in a workout
         void FFwdLap();     // jump forward to next Lap marker
+        void RewindLap();   // jump backwards to previous Lap marker
         void Higher();      // set load/gradient higher
         void Lower();       // set load/gradient higher
         void newLap();      // start new Lap!
         void resetLapTimer(); //reset the lap timer
+        void resetTextAudioEmitTracking();
         void steerScroll(int scrollAmount);   // Scroll the train display
 
         void toggleCalibration();
@@ -266,14 +268,13 @@ class TrainSidebar : public GcWindow
         double displayLatitude, displayLongitude, displayAltitude; // geolocation
         long load;
         double slope;
-        int displayLap;            // user increment for Lap
         int displayWorkoutLap;     // which Lap in the workout are we at?
         bool lapAudioEnabled;
         bool lapAudioThisLap;
+        double textPositionEmitted;
         bool useSimulatedSpeed;
 
-        void updateMetricLapDistance();
-        void updateMetricLapDistanceRemaining();
+        void maintainLapDistanceState();
 
         // for non-zero average calcs
         int pwrcount, cadcount, hrcount, spdcount, lodcount, grdcount; // for NZ average calc
@@ -284,8 +285,11 @@ class TrainSidebar : public GcWindow
         int lastRecordSecs;     // to avoid duplicates
         QFile *rrFile;          // r-r records, if any received.
         QFile *vo2File;         // vo2 records, if any received.
-        ErgFile *ergFile;       // workout file
-        VideoSyncFile *videosyncFile;       // videosync file
+
+        // ErgFile wrapper to support stateful location queries.
+        ErgFileQueryAdapter        ergFileQueryAdapter;
+
+        VideoSyncFile             *videosyncFile;     // videosync file
 
         bool     startCalibration, restartCalibration, finishCalibration;
         int      calibrationDeviceIndex;

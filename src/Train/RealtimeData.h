@@ -46,7 +46,8 @@ public:
                       LeftTorqueEffectiveness, RightTorqueEffectiveness,
                       LeftPedalSmoothness, RightPedalSmoothness, Slope, 
                       LapDistance, LapDistanceRemaining, ErgTimeRemaining,
-                      Latitude, Longitude, Altitude, RouteDistance };
+                      Latitude, Longitude, Altitude, RouteDistance,
+                      DistanceRemaining };
 
     typedef enum dataseries DataSeries;
 
@@ -66,7 +67,7 @@ public:
     void setSpeed(double speed);
     void setWbal(double speed);
     void setVirtualSpeed(double speed);
-    void setWheelRpm(double wheelRpm);
+    void setWheelRpm(double wheelRpm, bool fMarkTimeSample = false);
     void setCadence(double aCadence);
     void setLoad(double load);
     void setSlope(double slope);
@@ -76,6 +77,7 @@ public:
     void setErgMsecsRemaining(long);
     void setDistance(double);
     void setRouteDistance(double);
+    void setDistanceRemaining(double);
     void setBikeScore(long);
     void setJoules(long);
     void setXPower(long);
@@ -124,6 +126,7 @@ public:
     double getWbal() const;
     double getVirtualSpeed() const;
     double getWheelRpm() const;
+    std::chrono::high_resolution_clock::time_point getWheelRpmSampleTime() const;
     double getCadence() const;
     double getLoad() const;
     double getSlope() const;
@@ -131,6 +134,7 @@ public:
     long getLapMsecs() const;
     double getDistance() const;
     double getRouteDistance() const;
+    double getDistanceRemaining() const;
     long getLap() const;
     double getLapDistance() const;
     double getLapDistanceRemaining() const;
@@ -171,9 +175,12 @@ private:
     double latitude, longitude, altitude;
     double vo2, vco2, rf, rmv, tv, feo2;
 
+    std::chrono::high_resolution_clock::time_point wheelRpmSampleTime;
+
     // derived data
     double distance;
     double routeDistance;
+    double distanceRemaining;
     double lapDistance;
     double lapDistanceRemaining;
     double virtualSpeed;

@@ -31,7 +31,7 @@ RealtimeData::RealtimeData()
     lrbalance = rte = lte = lps = rps = 0.0;
     latitude = longitude = altitude = 0.0;
     rf = rmv = vo2 = vco2 = tv = feo2 = 0.0;
-    routeDistance = 0.0;
+    routeDistance = distanceRemaining = 0.0;
     trainerStatusAvailable = false;
     trainerReady = true;
     trainerRunning = true;
@@ -78,9 +78,12 @@ void RealtimeData::setVirtualSpeed(double speed)
 {
     this->virtualSpeed = speed;
 }
-void RealtimeData::setWheelRpm(double wheelRpm)
+void RealtimeData::setWheelRpm(double wheelRpm, bool fMarkWheelRpmTime)
 {
     this->wheelRpm = wheelRpm;
+
+    if (fMarkWheelRpmTime)
+        this->wheelRpmSampleTime = std::chrono::high_resolution_clock::now();
 }
 void RealtimeData::setCadence(double aCadence)
 {
@@ -120,6 +123,11 @@ void RealtimeData::setDistance(double x)
 void RealtimeData::setRouteDistance(double x)
 {
     this->routeDistance = x;
+}
+
+void RealtimeData::setDistanceRemaining(double x)
+{
+    this->distanceRemaining = x;
 }
 
 void RealtimeData::setLapDistance(double x)
@@ -196,6 +204,10 @@ double RealtimeData::getWheelRpm() const
 {
     return wheelRpm;
 }
+std::chrono::high_resolution_clock::time_point RealtimeData::getWheelRpmSampleTime() const
+{
+    return this->wheelRpmSampleTime;
+}
 double RealtimeData::getCadence() const
 {
     return cadence;
@@ -223,6 +235,10 @@ double RealtimeData::getDistance() const
 double RealtimeData::getRouteDistance() const
 {
     return routeDistance;
+}
+double RealtimeData::getDistanceRemaining() const
+{
+    return distanceRemaining;
 }
 double RealtimeData::getLapDistance() const
 {
@@ -340,6 +356,9 @@ double RealtimeData::value(DataSeries series) const
         break;
 
     case RouteDistance: return routeDistance;
+        break;
+
+    case DistanceRemaining: return distanceRemaining;
         break;
 
     case LapDistance: return lapDistance;
@@ -500,6 +519,7 @@ const QList<RealtimeData::DataSeries> &RealtimeData::listDataSeries()
         seriesList << Longitude;
         seriesList << Altitude;
         seriesList << RouteDistance;
+        seriesList << DistanceRemaining;
     }
     return seriesList;
 }
@@ -560,7 +580,10 @@ QString RealtimeData::seriesName(DataSeries series)
     case Distance: return tr("Distance");
         break;
 
-    case RouteDistance: return tr("RouteDistance");
+    case RouteDistance: return tr("Route Distance");
+        break;
+
+    case DistanceRemaining: return tr("Distance Remaining");
         break;
 
     case AltWatts: return tr("Alternate Power");
