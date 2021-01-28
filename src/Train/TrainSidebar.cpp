@@ -1522,7 +1522,6 @@ void TrainSidebar::Connect()
     foreach(int dev, activeDevices) {
         Devices[dev].controller->setWheelCircumference(Devices[dev].wheelSize);
         Devices[dev].controller->setRollingResistance(bicycle.RollingResistance());
-        Devices[dev].controller->setWindResistance(bicycle.WindResistance());
         Devices[dev].controller->setWeight(bicycle.MassKG());
         Devices[dev].controller->setWindSpeed(0); // Move to loadUpdate when wind simulation is added
 
@@ -2107,7 +2106,10 @@ void TrainSidebar::loadUpdate()
         if (slope == -100) {
             Stop(DEVICE_OK);
         } else {
-            foreach(int dev, activeDevices) Devices[dev].controller->setGradient(slope);
+            foreach(int dev, activeDevices) {
+                Devices[dev].controller->setGradient(slope);
+                Devices[dev].controller->setWindResistance(bicycle.WindResistance(displayAltitude));
+            }
             context->notifySetNow(displayWorkoutDistance * 1000);
         }
     }
