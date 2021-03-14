@@ -493,8 +493,18 @@ struct FitFileReaderState
                 default: return QString("Stages Cycling %1").arg(prod);
             }
         } else if (manu == 70) {
-            // does not set product at this point
-           return "Sigmasport ROX";
+            // SIGMA SPORT Germany
+            switch (prod) {
+                case 15: return "SIGMA ROX 10.0";
+                case 18: return "SIGMA ROX 7.0";
+                case 41: return "SIGMA ROX 11.0";
+                case 42: return "SIGMA iD.RUN";
+                case 43: return "SIGMA iD.RUN HR";
+                case 44: return "SIGMA ROX 12.0";
+                case 45: return "SIGMA iD.FREE";
+                case 46: return "SIGMA iD.TRI";
+                default: return QString("SIGMA SPORT %1").arg(prod);
+            }
         } else if (manu == 76) {
             // Moxy
             return "Moxy Monitor";
@@ -1814,7 +1824,7 @@ struct FitFileReaderState
                     case 30: //LEFT_RIGHT_BALANCE
                              // When bit 7 is 1 value are right power contribution
                              // not '1' the location of the contribution is undefined
-                             if (value > 0)
+                             if (value & 0x80)
                                 lrbalance = 100 - (value & 0x7F);
                              else
                                 lrbalance = RideFile::NA;
