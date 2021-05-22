@@ -22,6 +22,7 @@
 #include "Context.h"
 #include "Colors.h"
 #include "ConfigDialog.h"
+#include "HelpWhatsThis.h"
 
 #include "RealtimeController.h" // for power trainer definitions
 #include "MultiRegressionizer.h"
@@ -41,6 +42,9 @@
 // Main wizard
 AddDeviceWizard::AddDeviceWizard(Context *context) : QWizard(context->mainWindow), context(context), controller(NULL)
 {
+    HelpWhatsThis *help = new HelpWhatsThis(this);
+    this->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Preferences_Training_AddDeviceWizard));
+
 #ifdef Q_OS_MAC
     setWizardStyle(QWizard::ModernStyle);
 #endif
@@ -682,7 +686,7 @@ AddImagic::browseClicked()
 AddPair::AddPair(AddDeviceWizard *parent) : QWizardPage(parent), wizard(parent)
 {
     setTitle(tr("Pair Devices"));
-    setSubTitle(tr("Search for and pair ANT+ devices"));
+    setSubTitle(tr("Search for and pair ANT+ devices (Pair FE-C sensor only for FE-C devices)"));
 
     signalMapper = NULL;
 
@@ -1032,18 +1036,21 @@ AddPairBTLE::validatePage()
 void
 AddVirtualPower::mySpinBoxChanged(int i)
 {
+    Q_UNUSED(i)
     drawConfig();
 }
 
 void
 AddVirtualPower::myDoubleSpinBoxChanged(double d)
 {
+    Q_UNUSED(d)
     drawConfig();
 }
 
 void
 AddVirtualPower::myCellChanged(int nRow, int nCol) 
 {
+    Q_UNUSED(nCol)
     bool state = this->blockSignals(true);
     if (state) return;
 
@@ -1077,6 +1084,7 @@ AddVirtualPower::myCellChanged(int nRow, int nCol)
 
 // Sort the virtualPowerTableWidget
 void AddVirtualPower::mySortTable(int i) {
+    Q_UNUSED(i)
 
     bool state = this->blockSignals(true);
     if (state) return;
@@ -1174,6 +1182,11 @@ AddVirtualPower::mySetTableFromComboBox(int i) {
     drawConfig();
 
     this->blockSignals(state);
+}
+
+void
+AddVirtualPower::virtualPowerNameChanged() {
+    virtualPowerCreateButton->setEnabled(!virtualPowerNameEdit->text().isEmpty());
 }
 
 void
@@ -1349,22 +1362,11 @@ AddVirtualPower::AddVirtualPower(AddDeviceWizard* parent) : QWizardPage(parent),
 
     // ---------------------------------------------
     // Virtual Power
+    //
+    QGroupBox* groupBox = new QGroupBox(tr("Custom Virtual Power Curve"));
+    QVBoxLayout* virtualPowerGroupLayout = new QVBoxLayout;
+
     QHBoxLayout* virtualPowerLayout = new QHBoxLayout;
-
-    QHBoxLayout* virtualPowerNameLayout = new QHBoxLayout;
-    virtualPowerNameLabel = new QLabel(tr("Custom Virtual Power Curve Name:"));
-    virtualPowerNameEdit = new QLineEdit(this);
-    virtualPowerCreateButton = new QPushButton(tr("Create"), this);
-    virtualPowerCreateButton->setToolTip(tr("Give the current fit a name that this device can use."));
-
-    virtualPowerNameLayout->addWidget(virtualPowerNameLabel);
-    virtualPowerNameLayout->addWidget(virtualPowerNameEdit);
-    virtualPowerNameLayout->addWidget(virtualPowerCreateButton);
-
-    connect(virtualPowerCreateButton, SIGNAL(clicked()),
-        this, SLOT(myCreateCustomPowerCurve()));
-
-    layout->addLayout(virtualPowerNameLayout);
 
     // Virtual Power Input Table
     virtualPowerTableWidget = new QTableWidget(1, 2, this);
@@ -1393,7 +1395,7 @@ AddVirtualPower::AddVirtualPower(AddDeviceWizard* parent) : QWizardPage(parent),
 
     virtualPowerLayout->addWidget(virtualPowerScatterChartView);
 
-    layout->addLayout(virtualPowerLayout);
+    virtualPowerGroupLayout->addLayout(virtualPowerLayout);
 
     QString fitOrderSpinBoxText = tr("Max Polynomial Order:");
     fitOrderSpinBoxLabel = new QLabel(fitOrderSpinBoxText);
@@ -1430,7 +1432,28 @@ AddVirtualPower::AddVirtualPower(AddDeviceWizard* parent) : QWizardPage(parent),
     virtualPowerSpinBoxLayout->addWidget(fitOrderLabel);
     virtualPowerSpinBoxLayout->addWidget(fitStdDevLabel);
 
-    layout->addLayout(virtualPowerSpinBoxLayout);
+    virtualPowerGroupLayout->addLayout(virtualPowerSpinBoxLayout);
+
+    QHBoxLayout* virtualPowerNameLayout = new QHBoxLayout;
+    virtualPowerNameLabel = new QLabel(tr("Name:"));
+    virtualPowerNameEdit = new QLineEdit(this);
+    virtualPowerCreateButton = new QPushButton(tr("Create and Select"), this);
+    virtualPowerCreateButton->setEnabled(false);
+    virtualPowerCreateButton->setToolTip(tr("Give the current fit a name and use for this device."));
+
+    virtualPowerNameLayout->addWidget(virtualPowerNameLabel);
+    virtualPowerNameLayout->addWidget(virtualPowerNameEdit);
+    virtualPowerNameLayout->addWidget(virtualPowerCreateButton);
+
+    connect(virtualPowerNameEdit, SIGNAL(textChanged(const QString&)),
+        this, SLOT(virtualPowerNameChanged()));
+    connect(virtualPowerCreateButton, SIGNAL(clicked()),
+        this, SLOT(myCreateCustomPowerCurve()));
+
+    virtualPowerGroupLayout->addLayout(virtualPowerNameLayout);
+
+    groupBox->setLayout(virtualPowerGroupLayout);
+    layout->addWidget(groupBox);
 
     connect(fitOrderSpinBox,   SIGNAL(valueChanged(int)), this, SLOT(mySpinBoxChanged(int)));
     connect(fitEpsilonSpinBox, SIGNAL(valueChanged(double)), this, SLOT(myDoubleSpinBoxChanged(double)));
@@ -1461,6 +1484,13 @@ AddVirtualPower::initializePage()
     resetWheelSize();
 
     this->blockSignals(state);
+}
+
+bool
+AddVirtualPower::validatePage()
+{
+    wizard->virtualPowerName = virtualPower->currentText();
+    return true;
 }
 
 void
@@ -1506,24 +1536,11 @@ AddFinal::AddFinal(AddDeviceWizard *parent) : QWizardPage(parent), wizard(parent
     formlayout->addRow(new QLabel(tr("Name*"), this), (name=new QLineEdit(this)));
     formlayout->addRow(new QLabel(tr("Port"), this), (port=new QLineEdit(this)));
     formlayout->addRow(new QLabel(tr("Profile"), this), (profile=new QLineEdit(this)));
-    formlayout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-    //profile->setFixedWidth(200);
-    port->setFixedWidth(150);
+    formlayout->addRow(new QLabel(tr("Virtual Power"), this), (virtualPowerName=new QLineEdit(this)));
     port->setEnabled(false); // no edit
-    //name->setFixedWidth(230);
+    virtualPowerName->setEnabled(false); // no edit
     hlayout->addLayout(formlayout);
 
-    selectDefault = new QGroupBox(tr("Selected by default"), this);
-    selectDefault->setCheckable(true);
-    selectDefault->setChecked(false);
-    layout->addWidget(selectDefault);
-
-    QGridLayout *grid = new QGridLayout;
-    selectDefault->setLayout(grid);
-    grid->addWidget((defWatts=new QCheckBox(tr("Power"))), 0,0, Qt::AlignVCenter|Qt::AlignLeft);
-    grid->addWidget((defBPM=new QCheckBox(tr("Heartrate"))), 1,0, Qt::AlignVCenter|Qt::AlignLeft);
-    grid->addWidget((defKPH=new QCheckBox(tr("Speed"))), 0,1, Qt::AlignVCenter|Qt::AlignLeft);
-    grid->addWidget((defRPM=new QCheckBox(tr("Cadence"))), 1,1, Qt::AlignVCenter|Qt::AlignLeft);
     layout->addStretch();
 }
 
@@ -1532,6 +1549,7 @@ AddFinal::initializePage()
 {
     port->setText(wizard->portSpec);
     profile->setText(wizard->profile);
+    virtualPowerName->setText(wizard->virtualPowerName);
 }
 
 bool
@@ -1547,11 +1565,6 @@ AddFinal::validatePage()
         add.name = name->text();
         add.portSpec = port->text();
         add.deviceProfile = profile->text();
-        add.defaultString = QString(defWatts->isChecked() ? "P" : "") +
-                            QString(defBPM->isChecked() ? "H" : "") +
-                            QString(defRPM->isChecked() ? "C" : "") +
-                            QString(defKPH->isChecked() ? "S" : "");
-
         add.postProcess = wizard->virtualPowerIndex;
         add.wheelSize = wizard->wheelSize;
         add.inertialMomentKGM2 = wizard->inertialMomentKGM2;

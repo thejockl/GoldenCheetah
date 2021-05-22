@@ -158,15 +158,18 @@ SearchBox::configChanged(qint32)
     // add special functions (older code needs fixing !)
     list << "config(cranklength)";
     list << "config(cp)";
+    list << "config(aetp)";
     list << "config(ftp)";
     list << "config(w')";
     list << "config(pmax)";
     list << "config(cv)";
+    list << "config(aetv)";
     list << "config(sex)";
     list << "config(dob)";
     list << "config(height)";
     list << "config(weight)";
     list << "config(lthr)";
+    list << "config(aethr)";
     list << "config(maxhr)";
     list << "config(rhr)";
     list << "config(units)";
@@ -198,7 +201,7 @@ SearchBox::configChanged(qint32)
 
     // get sorted list
     QStringList names = context->tab->rideNavigator()->logicalHeadings;
-    qSort(names.begin(), names.end(), insensitiveLessThan);
+    std::sort(names.begin(), names.end(), insensitiveLessThan);
 
     foreach(QString name, names) {
 
@@ -218,7 +221,7 @@ SearchBox::configChanged(qint32)
     }
 
     // sort the list
-    qSort(list.begin(), list.end(), insensitiveLessThan);
+    std::sort(list.begin(), list.end(), insensitiveLessThan);
 
     // set new list
     completer->setList(list);

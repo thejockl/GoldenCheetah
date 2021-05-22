@@ -445,6 +445,9 @@ GeneralPage::browseAthleteDir()
 //
 DevicePage::DevicePage(QWidget *parent, Context *context) : QWidget(parent), context(context)
 {
+    HelpWhatsThis *help = new HelpWhatsThis(this);
+    this->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Preferences_Training_TrainDevices));
+
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
     DeviceTypes all;
@@ -712,6 +715,9 @@ bool deviceModel::setData(const QModelIndex &index, const QVariant &value, int r
 //
 TrainOptionsPage::TrainOptionsPage(QWidget *parent, Context *context) : QWidget(parent), context(context)
 {
+    HelpWhatsThis *help = new HelpWhatsThis(this);
+    this->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Preferences_Training_Preferences));
+
     //
     // Workout directory (train view)
     //
@@ -751,6 +757,14 @@ TrainOptionsPage::TrainOptionsPage(QWidget *parent, Context *context) : QWidget(
     lapAlert = new QCheckBox(tr("Play sound before new lap"), this);
     lapAlert->setChecked(appsettings->value(this, TRAIN_LAPALERT, false).toBool());
 
+    delayLabel = new QLabel(tr("Start Countdown"));
+    startDelay = new QSpinBox(this);
+    startDelay->setMaximum(600);
+    startDelay->setMinimum(0);
+    startDelay->setSuffix(tr(" secs"));
+    startDelay->setValue(appsettings->value(this, TRAIN_STARTDELAY, 0).toUInt());
+    startDelay->setToolTip(tr("Countdown for workout start"));
+
     QVBoxLayout *all = new QVBoxLayout(this);
 
     QGridLayout *wdLayout = new QGridLayout;
@@ -765,6 +779,13 @@ TrainOptionsPage::TrainOptionsPage(QWidget *parent, Context *context) : QWidget(
     all->addWidget(autoConnect);
     all->addWidget(autoHide);
     all->addWidget(lapAlert);
+
+    QHBoxLayout *delayLayout = new QHBoxLayout;
+    delayLayout->addWidget(delayLabel);
+    delayLayout->addWidget(startDelay);
+    delayLayout->addStretch();
+    all->addLayout(delayLayout);
+
     all->addStretch();
 }
 
@@ -778,6 +799,7 @@ TrainOptionsPage::saveClicked()
     appsettings->setValue(TRAIN_USESIMULATEDHYPOXIA, useSimulatedHypoxia->isChecked());
     appsettings->setValue(TRAIN_MULTI, multiCheck->isChecked());
     appsettings->setValue(TRAIN_AUTOCONNECT, autoConnect->isChecked());
+    appsettings->setValue(TRAIN_STARTDELAY, startDelay->value());
     appsettings->setValue(TRAIN_AUTOHIDE, autoHide->isChecked());
     appsettings->setValue(TRAIN_LAPALERT, lapAlert->isChecked());
 
@@ -800,6 +822,9 @@ TrainOptionsPage::browseWorkoutDir()
 //
 RemotePage::RemotePage(QWidget *parent, Context *context) : QWidget(parent), context(context)
 {
+    HelpWhatsThis *help = new HelpWhatsThis(this);
+    this->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Preferences_Training_RemoteControls));
+
     remote = new RemoteControl;
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -1040,6 +1065,9 @@ SimBicyclePage::SetStatsLabelArray(double )
 
 SimBicyclePage::SimBicyclePage(QWidget *parent, Context *context) : QWidget(parent), context(context)
 {
+    HelpWhatsThis *help = new HelpWhatsThis(this);
+    this->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Preferences_Training_VirtualBicycleSpecifications));
+
     QVBoxLayout *all = new QVBoxLayout(this);
     QGridLayout *grid = new QGridLayout;
 

@@ -373,17 +373,18 @@ Strava::writeFile(QByteArray &data, QString remotename, RideFile *ride)
     //XXXprivatePart.setBody(parent->privateChk->isChecked() ? "1" : "0");
     //XXXmultiPart->append(privatePart);
 
-    //XXXQHttpPart commutePart;
-    //XXXcommutePart.setHeader(QNetworkRequest::ContentDispositionHeader,
-    //XXX                      QVariant("form-data; name=\"commute\""));
-    //XXXcommutePart.setBody(parent->commuteChk->isChecked() ? "1" : "0");
-    //XXXmultiPart->append(commutePart);
+    QHttpPart commutePart;
+    commutePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                          QVariant("form-data; name=\"commute\""));
+    commutePart.setBody(ride->getTag("Commute", "0").toInt() ? "1" : "0");
+    multiPart->append(commutePart);
 
-    //XXXQHttpPart trainerPart;
-    //XXXtrainerPart.setHeader(QNetworkRequest::ContentDispositionHeader,
-    //XXX                      QVariant("form-data; name=\"trainer\""));
-    //XXXtrainerPart.setBody(parent->trainerChk->isChecked() ? "1" : "0");
-    //XXXmultiPart->append(trainerPart);
+    QHttpPart trainerPart;
+    trainerPart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                          QVariant("form-data; name=\"trainer\""));
+    trainerPart.setBody((ride->getTag("Trainer", "0").toInt() ||
+                         ride->xdata("TRAIN")) ? "1" : "0");
+    multiPart->append(trainerPart);
 
     if (manual) {
 
@@ -917,6 +918,21 @@ Strava::prepareResponse(QByteArray* data)
             if (meta != "Notes") ride->setTag("Notes", each["description"].toString());
         }
 
+        if (!each["commute"].isNull()) {
+            ride->setTag("Commute", each["commute"].toBool() ? "1" : "0");
+        }
+
+        if (!each["trainer"].isNull()) {
+            ride->setTag("Trainer", each["trainer"].toBool() ? "1" : "0");
+        }
+
+        if (each["gear"].isObject()) {
+            QJsonObject gear = each["gear"].toObject();
+            if (gear["name"].isString()) {
+                ride->setTag("Equipment", gear["name"].toString());
+            }
+        }
+
         if (each["manual"].toBool()) {
             if (each["distance"].toDouble()>0) {
                 QMap<QString,QString> map;
@@ -941,6 +957,7 @@ Strava::prepareResponse(QByteArray* data)
 
         } else {
             addSamples(ride, QString("%1").arg(each["id"].toVariant().toULongLong()));
+
             // laps?
             if (!each["laps"].isNull()) {
                 QJsonArray laps = each["laps"].toArray();

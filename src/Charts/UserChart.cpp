@@ -29,6 +29,7 @@
 #include "MainWindow.h"
 #include "UserChartData.h"
 #include "TimeUtils.h"
+#include "HelpWhatsThis.h"
 
 #include <limits>
 #include <QScrollArea>
@@ -36,6 +37,9 @@
 
 UserChart::UserChart(Context *context, bool rangemode) : GcChartWindow(context), context(context), rangemode(rangemode), stale(true), last(NULL)
 {
+    HelpWhatsThis *helpContents = new HelpWhatsThis(this);
+    this->setWhatsThis(helpContents->getWhatsThisText(HelpWhatsThis::Chart_User));
+
     // the config
     settingsTool = new UserChartSettings(context, rangemode, chartinfo, seriesinfo, axisinfo);
     setControls(settingsTool);
@@ -472,6 +476,9 @@ UserChart::applySettings(QString x)
 UserChartSettings::UserChartSettings(Context *context, bool rangemode, GenericChartInfo &chart, QList<GenericSeriesInfo> &series, QList<GenericAxisInfo> &axes) :
   context(context), rangemode(rangemode), chartinfo(chart), seriesinfo(series), axisinfo(axes), updating(false)
 {
+    HelpWhatsThis *helpConfig = new HelpWhatsThis(this);
+    this->setWhatsThis(helpConfig->getWhatsThisText(HelpWhatsThis::Chart_User));
+
     QVBoxLayout *layout = new QVBoxLayout(this);
     tabs = new QTabWidget(this);
     layout->addWidget(tabs);
@@ -1114,15 +1121,18 @@ EditUserSeriesDialog::EditUserSeriesDialog(Context *context, bool rangemode, Gen
     // add special functions (older code needs fixing !)
     list << "config(cranklength)";
     list << "config(cp)";
+    list << "config(aetp)";
     list << "config(ftp)";
     list << "config(w')";
     list << "config(pmax)";
     list << "config(cv)";
+    list << "config(aetv)";
     list << "config(sex)";
     list << "config(dob)";
     list << "config(height)";
     list << "config(weight)";
     list << "config(lthr)";
+    list << "config(aethr)";
     list << "config(maxhr)";
     list << "config(rhr)";
     list << "config(units)";
@@ -1149,7 +1159,7 @@ EditUserSeriesDialog::EditUserSeriesDialog(Context *context, bool rangemode, Gen
     list << "best(vam, 3600)";
     list << "best(wpk, 3600)";
 
-    qSort(names.begin(), names.end(), insensitiveLessThan);
+    std::sort(names.begin(), names.end(), insensitiveLessThan);
 
     foreach(QString name, names) {
 

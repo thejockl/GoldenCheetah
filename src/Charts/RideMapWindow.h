@@ -109,9 +109,10 @@ class RideMapWindow : public GcChartWindow
     Q_PROPERTY(bool showmarkers READ showMarkers WRITE setShowMarkers USER true)
     Q_PROPERTY(bool showfullplot READ showFullPlot WRITE setFullPlot USER true)
     Q_PROPERTY(bool showintervals READ showIntervals WRITE setShowIntervals USER true)
+    Q_PROPERTY(bool hideShadedZones READ hideShadedZones WRITE setHideShadedZones USER true)
+    Q_PROPERTY(bool hideYellowLine READ hideYellowLine WRITE setHideYellowLine USER true)
     Q_PROPERTY(int osmts READ osmTS WRITE setOsmTS USER true)
     Q_PROPERTY(QString googleKey READ googleKey WRITE setGoogleKey USER true)
-    Q_PROPERTY(QString styleoptions READ getStyleOptions WRITE setStyleOptions  USER false)
 
     public:
         typedef enum {
@@ -131,6 +132,12 @@ class RideMapWindow : public GcChartWindow
         bool showIntervals() const { return showInt->isChecked(); }
         void setShowIntervals(bool x) { showInt->setChecked(x); }
 
+        bool hideShadedZones() const { return hideShadedZonesCk->isChecked(); }
+        void setHideShadedZones(bool x) { hideShadedZonesCk->setChecked(x); }
+
+        bool hideYellowLine() const { return hideYellowLineCk->isChecked(); }
+        void setHideYellowLine(bool x) { hideYellowLineCk->setChecked(x); }
+
         bool showMarkers() const { return ( showMarkersCk->checkState() == Qt::Checked); }
         void setShowMarkers(bool x) { if (x) showMarkersCk->setCheckState(Qt::Checked); else showMarkersCk->setCheckState(Qt::Unchecked) ;}
 
@@ -143,9 +150,6 @@ class RideMapWindow : public GcChartWindow
             setTileServerUrlForTileType(x);
         }
 
-        QString getStyleOptions() const { return styleoptions; }
-        void setStyleOptions(QString x) { styleoptions=x; }
-
         QString googleKey() const { return gkey->text(); }
         void setGoogleKey(QString x) { gkey->setText(x); }
 
@@ -155,6 +159,8 @@ class RideMapWindow : public GcChartWindow
         void tileTypeSelected(int x);
         void showMarkersChanged(int value);
         void showFullPlotChanged(int value);
+        void hideShadedZonesChanged(int value);
+        void hideYellowLineChanged(int value);
         void showIntervalsChanged(int value);
         void osmCustomTSURLEditingFinished();
 
@@ -172,10 +178,10 @@ class RideMapWindow : public GcChartWindow
     private:
 
         bool first;
-        QString styleoptions;
 
         QComboBox *mapCombo, *tileCombo;
         QCheckBox *showMarkersCk, *showFullPlotCk, *showInt;
+        QCheckBox* hideShadedZonesCk, * hideYellowLineCk;
         QLabel *osmTSTitle, *osmTSLabel, *osmTSUrlLabel;
         QLineEdit *osmTSUrl;
 

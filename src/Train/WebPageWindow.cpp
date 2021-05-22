@@ -113,8 +113,8 @@ WebPageWindow::WebPageWindow(Context *context) : GcChartWindow(context), context
 
     QWidget *settingsWidget = new QWidget(this);
     settingsWidget->setContentsMargins(0,0,0,0);
-    //HelpWhatsThis *helpSettings = new HelpWhatsThis(settingsWidget);
-    //settingsWidget->setWhatsThis(helpSettings->getWhatsThisText(HelpWhatsThis::ChartRides_Critical_MM_Config_Settings));
+    HelpWhatsThis *helpSettings = new HelpWhatsThis(settingsWidget);
+    settingsWidget->setWhatsThis(helpSettings->getWhatsThisText(HelpWhatsThis::Chart_Web));
 
 
     QFormLayout *commonLayout = new QFormLayout(settingsWidget);
@@ -137,7 +137,7 @@ WebPageWindow::WebPageWindow(Context *context) : GcChartWindow(context), context
     view = new QWebEngineView(this);
     connect(view, SIGNAL(loadFinished(bool)), this, SLOT(loadFinished(bool)));
 
-    //view->page()->profile()->setHttpUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393");
+    view->page()->profile()->setHttpUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393");
 
     // add a download interceptor
     WebDownloadInterceptor *interceptor = new WebDownloadInterceptor;
@@ -166,7 +166,7 @@ WebPageWindow::WebPageWindow(Context *context) : GcChartWindow(context), context
     layout->addWidget(view);
 
     HelpWhatsThis *help = new HelpWhatsThis(view);
-    view->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::ChartRides_Map));
+    view->setWhatsThis(help->getWhatsThisText(HelpWhatsThis::Chart_Web));
 
     // if we change in settings, force replot by pressing return
     connect(customUrl, SIGNAL(returnPressed()), this, SLOT(forceReplot()));

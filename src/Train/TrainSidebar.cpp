@@ -26,6 +26,7 @@
 #include "DeviceTypes.h"
 #include "DeviceConfiguration.h"
 #include "RideImportWizard.h"
+#include "HelpWhatsThis.h"
 #include <QApplication>
 #include <QtGui>
 #include <QRegExp>
@@ -133,7 +134,6 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     QStyle *cde = QStyleFactory::create(OS_STYLE);
     mediaTree->verticalScrollBar()->setStyle(cde);
 #endif
-
 
 #ifdef GC_HAVE_VLC  // RLV currently only support for VLC
     videosyncModel = new QSqlTableModel(this, trainDB->connection());
@@ -264,10 +264,15 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     connect(moreWorkoutAct, SIGNAL(triggered(void)), this, SLOT(workoutPopup(void)));
 
     deviceItem->addWidget(deviceTree);
+    HelpWhatsThis *helpDeviceTree = new HelpWhatsThis(deviceTree);
+    deviceTree->setWhatsThis(helpDeviceTree->getWhatsThisText(HelpWhatsThis::SideBarTrainView_Devices));
     trainSplitter->addWidget(deviceItem);
     workoutItem->addWidget(workoutFilter);
     workoutItem->addWidget(workoutTree);
+    HelpWhatsThis *helpWorkoutTree = new HelpWhatsThis(workoutTree);
+    workoutTree->setWhatsThis(helpWorkoutTree->getWhatsThisText(HelpWhatsThis::SideBarTrainView_Workouts));
     trainSplitter->addWidget(workoutItem);
+
     cl->addWidget(trainSplitter);
 
 #if !defined GC_VIDEO_NONE
@@ -276,6 +281,8 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     mediaItem->addAction(moreMediaAct);
     connect(moreMediaAct, SIGNAL(triggered(void)), this, SLOT(mediaPopup(void)));
     mediaItem->addWidget(mediaTree);
+    HelpWhatsThis *helpMediaTree = new HelpWhatsThis(mediaTree);
+    mediaTree->setWhatsThis(helpMediaTree->getWhatsThisText(HelpWhatsThis::SideBarTrainView_Media));
     trainSplitter->addWidget(mediaItem);
 
 #ifdef GC_HAVE_VLC  // RLV currently only support for VLC
@@ -284,6 +291,8 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     videosyncItem->addAction(moreVideoSyncAct);
     connect(moreVideoSyncAct, SIGNAL(triggered(void)), this, SLOT(videosyncPopup(void)));
     videosyncItem->addWidget(videosyncTree);
+    HelpWhatsThis *helpVideosyncTree = new HelpWhatsThis(videosyncTree);
+    videosyncTree->setWhatsThis(helpVideosyncTree->getWhatsThisText(HelpWhatsThis::SideBarTrainView_VideoSync));
     trainSplitter->addWidget(videosyncItem);
 #endif //GC_HAVE_VLC
 #endif //GC_VIDEO_NONE
@@ -332,11 +341,14 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     gui_timer = new QTimer(this);
     disk_timer = new QTimer(this);
     load_timer = new QTimer(this);
+    start_timer = new QTimer(this);
+    start_timer->setSingleShot(true);
 
     session_time = QTime();
     session_elapsed_msec = 0;
     lap_time = QTime();
     lap_elapsed_msec = 0;
+    secs_to_start = 0;
 
     rrFile = recordFile = vo2File = NULL;
     lastRecordSecs = 0;
@@ -362,6 +374,7 @@ TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(contex
     connect(gui_timer, SIGNAL(timeout()), this, SLOT(guiUpdate()));
     connect(disk_timer, SIGNAL(timeout()), this, SLOT(diskUpdate()));
     connect(load_timer, SIGNAL(timeout()), this, SLOT(loadUpdate()));
+    connect(start_timer, SIGNAL(timeout()), this, SLOT(Start()));
 
     configChanged(CONFIG_APPEARANCE | CONFIG_DEVICES | CONFIG_ZONES); // will reset the workout tree
     setLabels();
@@ -802,6 +815,18 @@ TrainSidebar::workoutTreeWidgetSelectionChanged()
             ergFileQueryAdapter.setErgFile(ergFile);
             adjustIntensity(100);
             setLabels();
+
+#if !defined GC_VIDEO_NONE
+            // Try to select matching media and videosync files
+            QString workoutName = QFileInfo(filename).baseName();
+            mediaTree->setFocus();
+            mediaTree->keyboardSearch(workoutName);
+#ifdef GC_HAVE_VLC  // RLV currently only support for VLC
+            videosyncTree->setFocus();
+            videosyncTree->keyboardSearch(workoutName);
+#endif
+            workoutTree->setFocus();
+#endif
         } else {
 
             // couldn't parse fall back to ERG mode
@@ -1174,6 +1199,18 @@ void TrainSidebar::Start()       // when start button is pressed
 
     } else if (status&RT_CONNECTED) {
 
+        // Delayed start handling
+        if (secs_to_start == 0) {
+            secs_to_start = appsettings->value(this, TRAIN_STARTDELAY, 0).toUInt();
+        } else {
+            secs_to_start--;
+        }
+        if (secs_to_start > 0) {
+            emit setNotification(tr("Starting in %1").arg(secs_to_start), 1);
+            start_timer->start(1000);
+            return;
+        }
+
         qDebug() << "start...";
 
 #ifdef WIN32
@@ -1249,10 +1286,16 @@ void TrainSidebar::Start()       // when start button is pressed
         }
 
         if (status & RT_RECORDING) {
+
+            QString workoutName;
+            if (context->currentErgFile()) {
+                workoutName = QFileInfo(context->currentErgFile()->filename).baseName();
+            }
+
             QDateTime now = QDateTime::currentDateTime();
 
             // setup file
-            QString filename = now.toString(QString("yyyy_MM_dd_hh_mm_ss")) + QString(".csv");
+            QString filename = now.toString(QString("yyyy_MM_dd_hh_mm_ss")) + "_" + workoutName + QString(".csv");
 
             if (!context->athlete->home->records().exists())
                 context->athlete->home->createAllSubdirs();
@@ -1537,6 +1580,12 @@ void TrainSidebar::Connect()
 
 void TrainSidebar::Disconnect()
 {
+    // cancel any pending start
+    if (secs_to_start > 0) {
+        secs_to_start = 0;
+        start_timer->stop();
+    }
+
     // don't try to disconnect if running or not connected
     if ((status&RT_RUNNING) || ((status&RT_CONNECTED) == 0)) return;
 
@@ -1792,6 +1841,13 @@ void TrainSidebar::guiUpdate()           // refreshes the telemetry
                         rtData.setSlope(slope);
                         rtData.setAltitude(displayAltitude);
                     }
+                }
+                else if (!(status & RT_MODE_ERGO)) {
+                    // For manual slope mode, estimate vertical change based upon time passed and slope.
+                    // Note this isn't exactly right but is very close - we should use the previous slope for the time passed.
+                    double altitudeDeltaMeters = slope * (10 * distanceTick); // ((slope / 100) * distanceTick) * 1000
+                    displayAltitude += altitudeDeltaMeters;
+                    rtData.setAltitude(displayAltitude);
                 }
 
                 // time

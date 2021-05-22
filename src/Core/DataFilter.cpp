@@ -1544,7 +1544,7 @@ void Leaf::validateFilter(Context *context, DataFilterRuntime *df, Leaf *leaf)
             // is the symbol valid?
             QRegExp bestValidSymbols("^(apower|power|hr|cadence|speed|torque|vam|xpower|isopower|wpk)$", Qt::CaseInsensitive);
             QRegExp tizValidSymbols("^(power|hr)$", Qt::CaseInsensitive);
-            QRegExp configValidSymbols("^(cranklength|cp|ftp|w\\'|pmax|cv|height|weight|lthr|maxhr|rhr|units|dob|sex)$", Qt::CaseInsensitive);
+            QRegExp configValidSymbols("^(cranklength|cp|aetp|ftp|w\\'|pmax|cv|aetv|height|weight|lthr|aethr|maxhr|rhr|units|dob|sex)$", Qt::CaseInsensitive);
             QRegExp constValidSymbols("^(e|pi)$", Qt::CaseInsensitive); // just do basics for now
             QRegExp dateRangeValidSymbols("^(start|stop)$", Qt::CaseInsensitive); // date range
             QRegExp pmcValidSymbols("^(stress|lts|sts|sb|rr|date)$", Qt::CaseInsensitive);
@@ -1996,7 +1996,8 @@ void Leaf::validateFilter(Context *context, DataFilterRuntime *df, Leaf *leaf)
                             int field = context->athlete->measures->getFieldSymbols(group).indexOf(field_symbol);
                             if (field < 0 && field_symbol != "date") {
                                 leaf->inerror = true;
-                                DataFiltererrors << QString(tr("invalid measures field '%1' for group '%2'.").arg(field_symbol).arg(group_symbol));
+                                DataFiltererrors << QString(tr("invalid measures field '%1' for group '%2', should be one of: %3.").arg(field_symbol).arg(group_symbol)
+                                .arg(context->athlete->measures->getFieldSymbols(group).join(", ")));
                             }
                         }
                     }
@@ -2488,7 +2489,6 @@ void Leaf::validateFilter(Context *context, DataFilterRuntime *df, Leaf *leaf)
                                 !symbol.compare("Today", Qt::CaseInsensitive) ||
                                 !symbol.compare("Current", Qt::CaseInsensitive) ||
                                 !symbol.compare("RECINTSECS", Qt::CaseInsensitive) ||
-                                !symbol.compare("Device", Qt::CaseInsensitive) ||
                                 !symbol.compare("NA", Qt::CaseInsensitive) ||
                                 df->dataSeriesSymbols.contains(symbol) ||
                                 symbol == "isRide" || symbol == "isSwim" ||
@@ -2975,9 +2975,6 @@ void DataFilter::configChanged(qint32)
     rt.dataSeriesSymbols = RideFile::symbols();
 }
 
-static double myisinf(double x) { return std::isinf(x); }
-static double myisnan(double x) { return std::isnan(x); }
-
 void
 Result::vectorize(int count)
 {
@@ -3007,14 +3004,6 @@ Result::vectorize(int count)
         it++; if (it == n) it=0;
     }
 }
-
-// used by lowerbound
-struct comparedouble { bool operator()(const double p1, const double p2) { return p1 < p2; } };
-struct compareqstring { bool operator()(const QString p1, const QString p2) { return p1 < p2; } };
-
-// qsort descend
-static bool doubledescend(const double &s1, const double &s2) { return s1 > s2; }
-static bool qstringdescend(const QString &s1, const QString &s2) { return s1 > s2; }
 
 // date arithmetic, a bit of a brute force, but need to rely upon
 // QDate arithmetic for handling months (so we don't have to)
@@ -3267,6 +3256,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             // Get CP and W' estimates for date of ride
             //
             double CP = 0;
+            double AeTP = 0;
             double FTP = 0;
             double WPRIME = 0;
             double PMAX = 0;
@@ -3277,6 +3267,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                 // if range is -1 we need to fall back to a default value
                 zoneRange = m->context->athlete->zones(m->isRun)->whichRange(m->dateTime.date());
                 FTP = CP = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getCP(zoneRange) : 0;
+                AeTP = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getAeT(zoneRange) : 0;
                 WPRIME = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getWprime(zoneRange) : 0;
                 PMAX = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getPmax(zoneRange) : 0;
 
@@ -3296,13 +3287,14 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                 if (oPMAX) PMAX=oPMAX;
             }
             //
-            // LTHR, MaxHR, RHR
+            // LTHR, AeTHR, MaxHR, RHR
             //
             int hrZoneRange = m->context->athlete->hrZones(m->isRun) ?
                               m->context->athlete->hrZones(m->isRun)->whichRange(m->dateTime.date())
                               : -1;
 
             int LTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getLT(hrZoneRange) : 0;
+            int AeTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getAeT(hrZoneRange) : 0;
             int RHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getRestHr(hrZoneRange) : 0;
             int MaxHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getMaxHr(hrZoneRange) : 0;
 
@@ -3314,6 +3306,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                                 -1;
 
             double CV = (paceZoneRange != -1) ? m->context->athlete->paceZones(m->isSwim)->getCV(paceZoneRange) : 0.0;
+            double AeTV = (paceZoneRange != -1) ? m->context->athlete->paceZones(m->isSwim)->getAeT(paceZoneRange) : 0.0;
 
             //
             // HEIGHT and WEIGHT
@@ -3337,6 +3330,9 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             if (symbol == "cp") {
                 return Result(CP);
             }
+            if (symbol == "aetp") {
+                return Result(AeTP);
+            }
             if (symbol == "ftp") {
                 return Result(FTP);
             }
@@ -3349,8 +3345,14 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             if (symbol == "cv") {
                 return Result(CV);
             }
+            if (symbol == "aetv") {
+                return Result(AeTV);
+            }
             if (symbol == "lthr") {
                 return Result(LTHR);
+            }
+            if (symbol == "aethr") {
+                return Result(AeTHR);
             }
             if (symbol == "rhr") {
                 return Result(RHR);
@@ -4560,11 +4562,11 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             returning.isNumber = v.isNumber;
 
             if (v.isNumber) {
-                if (ascending) qSort(v.asNumeric());
-                else qSort(v.asNumeric().begin(), v.asNumeric().end(), doubledescend);
+                if (ascending) std::sort(v.asNumeric().begin(), v.asNumeric().end(), Utils::doubleascend);
+                else std::sort(v.asNumeric().begin(), v.asNumeric().end(), Utils::doubledescend);
             } else {
-                if (ascending) qSort(v.asString());
-                else qSort(v.asString().begin(), v.asString().end(), qstringdescend);
+                if (ascending) std::sort(v.asString().begin(), v.asString().end(), Utils::qstringascend);
+                else std::sort(v.asString().begin(), v.asString().end(), Utils::qstringdescend);
             }
 
             // put the index into the result we are returning.
@@ -4724,11 +4726,11 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
 
             if (list.isNumber) {
                 // lets do it with std::lower_bound then
-                QVector<double>::const_iterator i = std::lower_bound(list.asNumeric().begin(), list.asNumeric().end(), value.number(), comparedouble());
+                QVector<double>::const_iterator i = std::lower_bound(list.asNumeric().begin(), list.asNumeric().end(), value.number(), Utils::comparedouble());
                 if (i == list.asNumeric().end()) return Result(list.asNumeric().size());
                 return Result(i - list.asNumeric().begin());
             } else {
-                QVector<QString>::const_iterator i = std::lower_bound(list.asString().begin(), list.asString().end(), value.string(), compareqstring());
+                QVector<QString>::const_iterator i = std::lower_bound(list.asString().begin(), list.asString().end(), value.string(), Utils::compareqstring());
                 if (i == list.asString().end()) return Result(list.asNumeric().size());
                 return Result(i - list.asString().begin());
             }
@@ -4760,7 +4762,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
 
             if (v.asNumeric().count() > 0) {
                 // sort the vector first
-                qSort(v.asNumeric());
+                std::sort(v.asNumeric().begin(), v.asNumeric().end());
 
                 if (quantiles.asNumeric().count() ==0) {
                     double quantile = quantiles.number();
@@ -5441,8 +5443,8 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                 case 17 : func = round; break;
 
                 case 18 : func = fabs; break;
-                case 19 : func = myisinf; break;
-                case 20 : func = myisnan; break;
+                case 19 : func = Utils::myisinf; break;
+                case 20 : func = Utils::myisnan; break;
                 }
 
                 Result v = eval(df, leaf->fparms[0],x, it, m, p, c, s, d);
@@ -5499,7 +5501,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                         if (vector.asNumeric().count() == 1) return Result(vector.asNumeric().at(0));
 
                         // sort and find the one in the middle
-                        qSort(vector.asNumeric());
+                        std::sort(vector.asNumeric().begin(), vector.asNumeric().end());
 
                         // let gsl do it
                         double median = gsl_stats_median_from_sorted_data(vector.asNumeric().constData(), 1, vector.asNumeric().count());
