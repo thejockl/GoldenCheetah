@@ -41,6 +41,9 @@ void RideDBerror(void*jc, const char *error) // used by parser aka yyerror()
 
 %}
 
+%require "3.4"
+%define api.header.include {"RideDB_yacc.h"}
+
 %pure-parser
 %lex-param { void *scanner }
 %parse-param { struct RideDBContext *jc }

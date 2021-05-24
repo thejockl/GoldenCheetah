@@ -49,6 +49,9 @@ extern Leaf *DataFilterroot; // root node for parsed statement
 
 %}
 
+%require "3.4"
+%define api.header.include {"DataFilter_yacc.h"}
+
 // Symbol can be meta or metric name
 %token <leaf> SYMBOL PYTHON
 

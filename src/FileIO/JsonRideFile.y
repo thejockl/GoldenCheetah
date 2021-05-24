@@ -106,6 +106,9 @@ static QString protect(const QString string)
 
 %}
 
+%require "3.4"
+%define api.header.include {"JsonRideFile_yacc.h"}
+
 %pure-parser
 %lex-param { void *scanner }
 %parse-param { struct JsonContext *jc }
