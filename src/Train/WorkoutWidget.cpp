@@ -1552,13 +1552,14 @@ WorkoutWidget::recompute(bool editing)
     setBlockCursor();
 
     int rnum=-1;
-    if (context->athlete->zones(false) == NULL ||
-        (rnum = context->athlete->zones(false)->whichRange(QDate::currentDate())) == -1) {
+    if (context->athlete->zones("Bike") == NULL ||
+        (rnum = context->athlete->zones("Bike")->whichRange(QDate::currentDate())) == -1) {
 
         // no cp or ftp set
         parent->TSSlabel->setText("- Stress");
         parent->IFlabel->setText("- Intensity");
 
+        return; // nothing to do if zones are not available to get CP et.al.
     }
 
     //
@@ -1566,12 +1567,12 @@ WorkoutWidget::recompute(bool editing)
     //
 
     // get CP/FTP to use in calculation
-    int WPRIME = context->athlete->zones(false)->getWprime(rnum);
-    int CP = context->athlete->zones(false)->getCP(rnum);
-    int PMAX = context->athlete->zones(false)->getPmax(rnum);
-    int FTP = context->athlete->zones(false)->getFTP(rnum);
+    int WPRIME = context->athlete->zones("Bike")->getWprime(rnum);
+    int CP = context->athlete->zones("Bike")->getCP(rnum);
+    int PMAX = context->athlete->zones("Bike")->getPmax(rnum);
+    int FTP = context->athlete->zones("Bike")->getFTP(rnum);
     bool useCPForFTP = (appsettings->cvalue(context->athlete->cyclist,
-                        context->athlete->zones(false)->useCPforFTPSetting(), 0).toInt() == 0);
+                        context->athlete->zones("Bike")->useCPforFTPSetting(), 0).toInt() == 0);
     if (useCPForFTP) FTP=CP;
     if (PMAX<=0) PMAX=1000;
     int K=WPRIME/(PMAX-CP);

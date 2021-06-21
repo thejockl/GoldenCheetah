@@ -3060,7 +3060,8 @@ LTMPlot::createEstimateData(Context *context, LTMSettings *settings, MetricDetai
     if (!SearchFilterBox::isNull(metricDetail.datafilter))
         spec.addMatches(SearchFilterBox::matches(context, metricDetail.datafilter));
     int nActivities, nRides, nRuns, nSwims;
-    context->athlete->rideCache->getRideTypeCounts(spec, nActivities, nRides, nRuns, nSwims);
+    QString sport;
+    context->athlete->rideCache->getRideTypeCounts(spec, nActivities, nRides, nRuns, nSwims, sport);
     metricDetail.run = (nRuns > 0 && nActivities == nRuns);
 
     // resize the curve array to maximum possible size (even if we don't need it)
@@ -3755,7 +3756,8 @@ LTMPlot::createPerformanceData(Context *context, LTMSettings *settings, MetricDe
     if (!SearchFilterBox::isNull(metricDetail.datafilter))
         spec.addMatches(SearchFilterBox::matches(context, metricDetail.datafilter));
     int nActivities, nRides, nRuns, nSwims;
-    context->athlete->rideCache->getRideTypeCounts(spec, nActivities, nRides, nRuns, nSwims);
+    QString sport;
+    context->athlete->rideCache->getRideTypeCounts(spec, nActivities, nRides, nRuns, nSwims, sport);
     metricDetail.run = (nRuns > 0 && nActivities == nRuns);
 
     int maxdays = groupForDate(settings->end.date(), settings->groupBy)
@@ -4153,8 +4155,8 @@ class LTMPlotBackground: public QwtPlotItem
                       const QwtScaleMap &xMap, const QwtScaleMap &yMap,
                       const QRectF &rect) const
     {
-        const Zones *zones       = parent->parent->context->athlete->zones(false);
-        int zone_range_size     = parent->parent->context->athlete->zones(false)->getRangeSize();
+        const Zones *zones      = parent->parent->context->athlete->zones("Bike");
+        int zone_range_size     = parent->parent->context->athlete->zones("Bike")->getRangeSize();
 
         if (zone_range_size >= 0) { //parent->shadeZones() &&
             for (int i = 0; i < zone_range_size; i ++) {
@@ -4210,7 +4212,7 @@ class LTMPlotZoneLabel: public QwtPlotItem
             parent = _parent;
             zone_number = _zone_number;
 
-            const Zones *zones       = parent->parent->context->athlete->zones(false);
+            const Zones *zones = parent->parent->context->athlete->zones("Bike");
             int zone_range     = zones->whichRange(settings->start.addDays((settings->end.date().toJulianDay()-settings->start.date().toJulianDay())/2).date());
 
             // which axis has watts?
@@ -4356,7 +4358,7 @@ void LTMPlot::refreshZoneLabels(QwtAxisId axisid)
     }
     if (axisid == QwtAxisId(-1,-1)) return; // our job is done - no zones to plot
 
-    const Zones *zones       = context->athlete->zones(false);
+    const Zones *zones       = context->athlete->zones("Bike");
 
     if (zones == NULL || zones->getRangeSize()==0) return; // no zones to plot
 

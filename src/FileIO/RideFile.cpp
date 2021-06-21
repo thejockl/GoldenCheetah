@@ -213,13 +213,43 @@ RideFile::wprimeData()
 }
 
 QString
+RideFile::sportTag(QString sport)
+{
+    // Some sports are standarized, all others are up to the user
+    static const QHash<QString, QString> sports = {
+        { tr("Bike"), "Bike" },
+        { "Biking", "Bike" }, { tr("Biking"), "Bike" },
+        { "Cycle", "Bike" }, { tr("Cycle"), "Bike" },
+        { "Cycling", "Bike" }, { tr("Cycling"), "Bike" },
+
+        { tr("Run"), "Run" },
+        { "Running", "Run" }, { tr("Running"), "Run" },
+
+        { tr("Swim"), "Swim" },
+        { "Swimming", "Swim" }, { tr("Swimming"), "Swim" },
+
+        { tr("Row"), "Row" },
+        { "Rowing", "Row" }, { tr("Rowing"), "Row" },
+
+        { tr("Ski"), "Ski" },
+        { "XC Ski", "Ski" }, { tr("XC Ski"), "Ski" },
+        { "Cross Country Skiiing", "Ski" }, { tr("Cross Countr Skiing"), "Ski" },
+
+        { tr("Gym"), "Gym" },
+        { "Strength", "Gym" }, { tr("Strength"), "Gym" },
+    };
+
+    return sports.value(sport, sport);
+}
+
+QString
 RideFile::sport() const
 {
     // Run, Bike and Swim are standarized, all others are up to the user
     if (isBike()) return "Bike";
     if (isRun()) return "Run";
     if (isSwim()) return "Swim";
-    return getTag("Sport","");
+    return sportTag(getTag("Sport",""));
 }
 
 bool
@@ -227,8 +257,8 @@ RideFile::isBike() const
 {
     // for now we just look at Sport and default to Bike when Sport is not
     // set and isRun and isSwim are false
-    return (getTag("Sport", "") == "Bike" || getTag("Sport", "") == tr("Bike")) ||
-           (getTag("Sport","") == "" && !isRun() && !isSwim());
+    return (sportTag(getTag("Sport", "")) == "Bike") ||
+           (getTag("Sport","").isEmpty() && !isRun() && !isSwim());
 }
 
 bool
@@ -236,16 +266,16 @@ RideFile::isRun() const
 {
     // for now we just look at Sport and if there are any
     // running specific data series in the data when Sport is not set
-    return (getTag("Sport", "") == "Run" || getTag("Sport", "") == tr("Run")) ||
-           (getTag("Sport","") == "" && (areDataPresent()->rvert || areDataPresent()->rcad || areDataPresent()->rcontact));
+    return (sportTag(getTag("Sport", "")) == "Run") ||
+           (getTag("Sport","").isEmpty() && (areDataPresent()->rvert || areDataPresent()->rcad || areDataPresent()->rcontact));
 }
 
 bool
 RideFile::isSwim() const
 {
     // for now we just look at Sport or presence of length data for lap swims
-    return (getTag("Sport", "") == "Swim" || getTag("Sport", "") == tr("Swim")) ||
-           (getTag("Sport","") == "" && xdata_.value("SWIM", NULL) != NULL);
+    return (sportTag(getTag("Sport", "")) == "Swim") ||
+           (getTag("Sport","").isEmpty() && xdata_.value("SWIM", NULL) != NULL);
 }
 
 bool
@@ -2348,10 +2378,10 @@ RideFile::recalculateDerivedSeries(bool force)
     double anTISS = 0.0f;
 
     // set WPrime and CP
-    if (context->athlete->zones(isRun())) {
-        int zoneRange = context->athlete->zones(isRun())->whichRange(startTime().date());
-        CP = zoneRange >= 0 ? context->athlete->zones(isRun())->getCP(zoneRange) : 0;
-        //WPRIME = zoneRange >= 0 ? context->athlete->zones(isRun())->getWprime(zoneRange) : 0;
+    if (context->athlete->zones(sport())) {
+        int zoneRange = context->athlete->zones(sport())->whichRange(startTime().date());
+        CP = zoneRange >= 0 ? context->athlete->zones(sport())->getCP(zoneRange) : 0;
+        //WPRIME = zoneRange >= 0 ? context->athlete->zones(sport())->getWprime(zoneRange) : 0;
 
         // did we override CP in metadata / metrics ?
         int oCP = getTag("CP","0").toInt();

@@ -1582,8 +1582,8 @@ void Leaf::validateFilter(Context *context, DataFilterRuntime *df, Leaf *leaf)
                         // convert to a float
                         leaf->type = Leaf::Float;
                         leaf->lvalue.f = 0.0L;
-                        if (symbol == "e") leaf->lvalue.f = MATHCONST_E;
-                        if (symbol == "pi") leaf->lvalue.f = MATHCONST_PI;
+                        if (symbol == "e") leaf->lvalue.f = (float)MATHCONST_E;
+                        if (symbol == "pi") leaf->lvalue.f = (float)MATHCONST_PI;
                     }
                 }
 
@@ -2769,12 +2769,12 @@ Result DataFilter::evaluate(RideItem *item, RideFilePoint *p)
 
         // ... start at main
         if (rt.functions.contains("main"))
-            res = treeRoot->eval(&rt, rt.functions.value("main"), 0, 0, item, p);
+            res = treeRoot->eval(&rt, rt.functions.value("main"), Result(0), 0, item, p);
 
     } else {
 
         // otherwise just evaluate the entire tree
-        res = treeRoot->eval(&rt, treeRoot, 0, 0, item, p);
+        res = treeRoot->eval(&rt, treeRoot, Result(0), 0, item, p);
     }
 
     return res;
@@ -2801,12 +2801,12 @@ Result DataFilter::evaluate(DateRange dr, QString filter)
 
         // ... start at main
         if (rt.functions.contains("main"))
-            res = treeRoot->eval(&rt, rt.functions.value("main"), 0, 0, const_cast<RideItem*>(context->currentRideItem()), NULL, NULL, spec, dr);
+            res = treeRoot->eval(&rt, rt.functions.value("main"), Result(0), 0, const_cast<RideItem*>(context->currentRideItem()), NULL, NULL, spec, dr);
 
     } else {
 
         // otherwise just evaluate the entire tree
-        res = treeRoot->eval(&rt, treeRoot, 0, 0, const_cast<RideItem*>(context->currentRideItem()), NULL, NULL, spec, dr);
+        res = treeRoot->eval(&rt, treeRoot, Result(0), 0, const_cast<RideItem*>(context->currentRideItem()), NULL, NULL, spec, dr);
     }
 
     return res;
@@ -2896,7 +2896,7 @@ QStringList DataFilter::parseFilter(Context *context, QString query, QStringList
         foreach(RideItem *item, context->athlete->rideCache->rides()) {
 
             // evaluate each ride...
-            Result result = treeRoot->eval(&rt, treeRoot, 0, 0,item, NULL);
+            Result result = treeRoot->eval(&rt, treeRoot, Result(0), 0,item, NULL);
             if (result.isNumber && result.number()) {
                 filenames << item->fileName;
             }
@@ -2922,7 +2922,7 @@ DataFilter::dynamicParse()
         foreach(RideItem *item, context->athlete->rideCache->rides()) {
 
             // evaluate each ride...
-            Result result = treeRoot->eval(&rt, treeRoot, 0, 0, item, NULL);
+            Result result = treeRoot->eval(&rt, treeRoot, Result(0), 0, item, NULL);
             if (result.isNumber && result.number())
                 filenames << item->fileName;
         }
@@ -3020,7 +3020,7 @@ static int monthsTo(QDate from, QDate to)
     return months;
 }
 
-Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem *m, RideFilePoint *p, const QHash<QString,RideMetric*> *c, Specification s, DateRange d)
+Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, const Result &x, long it, RideItem *m, RideFilePoint *p, const QHash<QString,RideMetric*> *c, Specification s, DateRange d)
 {
     // if error state all bets are off
     //if (inerror) return Result(0);
@@ -3262,20 +3262,20 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             double PMAX = 0;
             int zoneRange;
 
-            if (m->context->athlete->zones(m->isRun)) {
+            if (m->context->athlete->zones(m->sport)) {
 
                 // if range is -1 we need to fall back to a default value
-                zoneRange = m->context->athlete->zones(m->isRun)->whichRange(m->dateTime.date());
-                FTP = CP = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getCP(zoneRange) : 0;
-                AeTP = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getAeT(zoneRange) : 0;
-                WPRIME = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getWprime(zoneRange) : 0;
-                PMAX = zoneRange >= 0 ? m->context->athlete->zones(m->isRun)->getPmax(zoneRange) : 0;
+                zoneRange = m->context->athlete->zones(m->sport)->whichRange(m->dateTime.date());
+                FTP = CP = zoneRange >= 0 ? m->context->athlete->zones(m->sport)->getCP(zoneRange) : 0;
+                AeTP = zoneRange >= 0 ? m->context->athlete->zones(m->sport)->getAeT(zoneRange) : 0;
+                WPRIME = zoneRange >= 0 ? m->context->athlete->zones(m->sport)->getWprime(zoneRange) : 0;
+                PMAX = zoneRange >= 0 ? m->context->athlete->zones(m->sport)->getPmax(zoneRange) : 0;
 
                 // use CP for FTP, or is it configured separately
                 bool useCPForFTP = (appsettings->cvalue(m->context->athlete->cyclist,
-                                    m->context->athlete->zones(m->isRun)->useCPforFTPSetting(), 0).toInt() == 0);
+                                    m->context->athlete->zones(m->sport)->useCPforFTPSetting(), 0).toInt() == 0);
                 if (zoneRange >= 0 && !useCPForFTP) {
-                    FTP = m->context->athlete->zones(m->isRun)->getFTP(zoneRange);
+                    FTP = m->context->athlete->zones(m->sport)->getFTP(zoneRange);
                 }
 
                 // did we override CP in metadata ?
@@ -3289,14 +3289,14 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
             //
             // LTHR, AeTHR, MaxHR, RHR
             //
-            int hrZoneRange = m->context->athlete->hrZones(m->isRun) ?
-                              m->context->athlete->hrZones(m->isRun)->whichRange(m->dateTime.date())
+            int hrZoneRange = m->context->athlete->hrZones(m->sport) ?
+                              m->context->athlete->hrZones(m->sport)->whichRange(m->dateTime.date())
                               : -1;
 
-            int LTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getLT(hrZoneRange) : 0;
-            int AeTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getAeT(hrZoneRange) : 0;
-            int RHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getRestHr(hrZoneRange) : 0;
-            int MaxHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->isRun)->getMaxHr(hrZoneRange) : 0;
+            int LTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->sport)->getLT(hrZoneRange) : 0;
+            int AeTHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->sport)->getAeT(hrZoneRange) : 0;
+            int RHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->sport)->getRestHr(hrZoneRange) : 0;
+            int MaxHR = hrZoneRange != -1 ?  m->context->athlete->hrZones(m->sport)->getMaxHr(hrZoneRange) : 0;
 
             //
             // CV
@@ -4892,6 +4892,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
 
             // loop and evaluate, non-zero we keep, zero we lose
             for(int i=0; (value.isNumber && i<value.asNumeric().count()) || (!value.isNumber && i<value.asString().count()); i++) {
+                Result x;
                 if (value.isNumber) x = Result(value.asNumeric().at(i));
                 else x = Result(value.asString().at(i));
                 Result r = eval(df,leaf->fparms[1],x, i, m, p, c, s, d);
@@ -5063,7 +5064,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                 // second entry is RMSE
                 double sume2=0, sum=0;
                 for(int index=0; index<xv.asNumeric().count(); index++) {
-                    double predict = eval(df,formula, xv.asNumeric()[index], 0, m, p, c, s, d).number();
+                    double predict = eval(df,formula, Result(xv.asNumeric()[index]), 0, m, p, c, s, d).number();
                     double actual = yv.asNumeric()[index];
                     double error = predict - actual;
                     sume2 +=  pow(error, 2);
@@ -5358,7 +5359,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                         if (c) duration = RideMetric::getForSymbol(rename=df->lookupMap.value(*(leaf->lvalue.l->lvalue.n),""), c);
                         else duration = m->getForSymbol(rename=df->lookupMap.value(*(leaf->lvalue.l->lvalue.n),""));
                     } else if (*(leaf->lvalue.l->lvalue.n) == "x") {
-                        duration = x.number();
+                        duration = Result(x).number();
                     } else if (*(leaf->lvalue.l->lvalue.n) == "i") {
                         duration = it;
                     } else {
@@ -5764,7 +5765,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                             foreach(double x, ex.asNumeric()) {
 
                                 // did it get selected?
-                                Result which = eval(df, leaf->fparms[0],x, it, m, p, c, s, d);
+                                Result which = eval(df, leaf->fparms[0],Result(x), it, m, p, c, s, d);
                                 if (which.number()) {
                                     returning.asNumeric() << x;
                                     returning.number() += x;
@@ -5774,7 +5775,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
                         } else {
 
                             // does the parameter get selected ?
-                            Result which = eval(df, leaf->fparms[0], ex.number(), it, m, p, c, s); //XXX it should be local index
+                            Result which = eval(df, leaf->fparms[0], Result(ex.number()), it, m, p, c, s); //XXX it should be local index
                             if (which.number()) {
                                 returning.asNumeric() << ex.number();
                                 returning.number() += ex.number();
@@ -6274,10 +6275,10 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
         } else if (symbol == "x") {
 
             if (x.isNumber) {
-                lhsdouble = x.number();
+                lhsdouble = Result(x).number();
                 lhsisNumber = true;
             } else {
-                lhsstring = x.string();
+                lhsstring = Result(x).string();
                 lhsisNumber = false;
             }
 
@@ -6750,7 +6751,7 @@ Result Leaf::eval(DataFilterRuntime *df, Leaf *leaf, Result x, long it, RideItem
         for(int i=0; (value.isNumber && i<value.asNumeric().count()) || (!value.isNumber && i<value.asString().count()) ; i++) {
 
             // we pass around x for the logical expression
-            x = Result(0);
+            Result x = Result(0);
             x.isNumber = value.isNumber;
             if (value.isNumber)  x.number() = value.asNumeric().at(i);
             else x.string() = value.asString().at(i);
@@ -6810,14 +6811,14 @@ DFModel::f(double t, const double *parms)
     for (int i=0; i< parameters.count(); i++)  df->symbols.insert(parameters[i], Result(parms[i]));
 
     // calulcate
-    return formula->eval(df, formula, t, 0, item, NULL, NULL, Specification(), DateRange()).number();
+    return formula->eval(df, formula, Result(t), 0, item, NULL, NULL, Specification(), DateRange()).number();
 }
 
 double
 DFModel::y(double t) const
 {
     // calculate using current runtime
-    return formula->eval(df, formula, t, 0, item, NULL, NULL, Specification(), DateRange()).number();
+    return formula->eval(df, formula, Result(t), 0, item, NULL, NULL, Specification(), DateRange()).number();
 }
 
 bool
@@ -6892,6 +6893,7 @@ DataFilterRuntime::runPythonScript(Context *context, QString script, RideItem *m
         result = python->result;
 
     } catch(std::exception& ex) {
+        Q_UNUSED(ex)
 
         python->messages.clear();
 
