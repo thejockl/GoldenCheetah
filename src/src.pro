@@ -687,7 +687,7 @@ HEADERS  += ANT/ANTChannel.h ANT/ANT.h ANT/ANTlocalController.h ANT/ANTLogger.h 
 HEADERS += Charts/Aerolab.h Charts/AerolabWindow.h Charts/AllPlot.h Charts/AllPlotInterval.h Charts/AllPlotSlopeCurve.h \
            Charts/AllPlotWindow.h Charts/BlankState.h Charts/ChartBar.h Charts/ChartSettings.h \
            Charts/CpPlotCurve.h Charts/CPPlot.h Charts/CriticalPowerWindow.h Charts/DaysScaleDraw.h Charts/ExhaustionDialog.h Charts/GcOverlayWidget.h \
-           Charts/GcPane.h Charts/GoldenCheetah.h Charts/HistogramWindow.h Charts/HomeWindow.h \
+           Charts/GcPane.h Charts/GoldenCheetah.h Charts/HistogramWindow.h \
            Charts/HrPwPlot.h Charts/HrPwWindow.h Charts/IndendPlotMarker.h Charts/IntervalSummaryWindow.h Charts/LogTimeScaleDraw.h \
            Charts/LTMCanvasPicker.h Charts/LTMChartParser.h Charts/LTMOutliers.h Charts/LTMPlot.h Charts/LTMPopup.h \
            Charts/LTMSettings.h Charts/LTMTool.h Charts/LTMTrend2.h Charts/LTMTrend.h Charts/LTMWindow.h \
@@ -735,7 +735,7 @@ HEADERS += Gui/AboutDialog.h Gui/AddIntervalDialog.h Gui/AnalysisSidebar.h Gui/C
            Gui/SaveDialogs.h Gui/SearchBox.h Gui/SearchFilterBox.h Gui/SolveCPDialog.h Gui/Tab.h Gui/TabView.h Gui/ToolsRhoEstimator.h \
            Gui/Views.h Gui/BatchExportDialog.h Gui/DownloadRideDialog.h Gui/ManualRideDialog.h Gui/NewMainWindow.h Gui/NewSideBar.h \
            Gui/MergeActivityWizard.h Gui/RideImportWizard.h Gui/SplitActivityWizard.h Gui/SolverDisplay.h Gui/MetricSelect.h \
-           Gui/AddChartWizard.h Gui/NavigationModel.h Gui/AthleteView.h Gui/AthleteConfigDialog.h Gui/AthletePages.h
+           Gui/AddChartWizard.h Gui/NavigationModel.h Gui/AthleteView.h Gui/AthleteConfigDialog.h Gui/AthletePages.h Gui/Perspective.h
 
 # metrics and models
 HEADERS += Metrics/Banister.h Metrics/CPSolver.h Metrics/Estimator.h Metrics/ExtendedCriticalPower.h Metrics/HrZones.h Metrics/PaceZones.h \
@@ -784,7 +784,7 @@ SOURCES += ANT/ANTChannel.cpp ANT/ANT.cpp ANT/ANTlocalController.cpp ANT/ANTLogg
 SOURCES += Charts/Aerolab.cpp Charts/AerolabWindow.cpp Charts/AllPlot.cpp Charts/AllPlotInterval.cpp Charts/AllPlotSlopeCurve.cpp \
            Charts/AllPlotWindow.cpp Charts/BlankState.cpp Charts/ChartBar.cpp Charts/ChartSettings.cpp \
            Charts/CPPlot.cpp Charts/CpPlotCurve.cpp Charts/CriticalPowerWindow.cpp Charts/ExhaustionDialog.cpp Charts/GcOverlayWidget.cpp Charts/GcPane.cpp \
-           Charts/GoldenCheetah.cpp Charts/HistogramWindow.cpp Charts/HomeWindow.cpp Charts/HrPwPlot.cpp \
+           Charts/GoldenCheetah.cpp Charts/HistogramWindow.cpp Charts/HrPwPlot.cpp \
            Charts/HrPwWindow.cpp Charts/IndendPlotMarker.cpp Charts/IntervalSummaryWindow.cpp Charts/LogTimeScaleDraw.cpp \
            Charts/LTMCanvasPicker.cpp Charts/LTMChartParser.cpp Charts/LTMOutliers.cpp Charts/LTMPlot.cpp Charts/LTMPopup.cpp \
            Charts/LTMSettings.cpp Charts/LTMTool.cpp Charts/LTMTrend.cpp Charts/LTMWindow.cpp \
@@ -835,7 +835,7 @@ SOURCES += Gui/AboutDialog.cpp Gui/AddIntervalDialog.cpp Gui/AnalysisSidebar.cpp
            Gui/SearchBox.cpp Gui/SearchFilterBox.cpp Gui/SolveCPDialog.cpp Gui/Tab.cpp Gui/TabView.cpp Gui/ToolsRhoEstimator.cpp Gui/Views.cpp \
            Gui/BatchExportDialog.cpp Gui/DownloadRideDialog.cpp Gui/ManualRideDialog.cpp Gui/EditUserMetricDialog.cpp Gui/NewMainWindow.cpp Gui/NewSideBar.cpp \
            Gui/MergeActivityWizard.cpp Gui/RideImportWizard.cpp Gui/SplitActivityWizard.cpp Gui/SolverDisplay.cpp Gui/MetricSelect.cpp \
-           Gui/AddChartWizard.cpp Gui/NavigationModel.cpp Gui/AthleteView.cpp Gui/AthleteConfigDialog.cpp Gui/AthletePages.cpp
+           Gui/AddChartWizard.cpp Gui/NavigationModel.cpp Gui/AthleteView.cpp Gui/AthleteConfigDialog.cpp Gui/AthletePages.cpp Gui/Perspective.cpp
 
 ## Models and Metrics
 SOURCES += Metrics/aBikeScore.cpp Metrics/aCoggan.cpp Metrics/AerobicDecoupling.cpp Metrics/Banister.cpp Metrics/BasicRideMetrics.cpp \
