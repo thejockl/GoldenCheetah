@@ -222,7 +222,7 @@ bool VideoWindow::hasActiveVideo() const
     }
 #endif
 #ifdef GC_VIDEO_QT5
-    if (LoadedMedia == mp->mediaStatus())
+    if (mp->state() != QMediaPlayer::StoppedState)
         return true;
 #endif
 
@@ -807,7 +807,10 @@ void VideoWindow::seekPlayback(long ms)
 #endif
 
 #ifdef GC_VIDEO_QT5
-    mp->setPosition(ms);
+    Q_UNUSED(ms)
+//TODO
+//    // seek to ms position in current file
+//    mp->setPosition(ms);
 #endif
 }
 
