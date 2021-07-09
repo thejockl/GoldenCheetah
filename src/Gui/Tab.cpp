@@ -61,7 +61,7 @@ Tab::Tab(Context *context) : QWidget(context->mainWindow), context(context), nos
     homeControls = new QStackedWidget(this);
     homeControls->setFrameStyle(QFrame::Plain | QFrame::NoFrame);
     homeControls->setContentsMargins(0,0,0,0);
-    homeView = new HomeView(context, homeControls);
+    homeView = new TrendsView(context, homeControls);
 
     // Diary
     diaryControls = new QStackedWidget(this);
@@ -152,7 +152,7 @@ void Tab::addChart(GcWinID i) { view(currentView())->addChart(i); }
 void Tab::addIntervals() { analysisView->addIntervals(); }
 
 void Tab::setRide(RideItem*ride) 
-{ 
+{
     analysisView->setRide(ride);
     homeView->setRide(ride);
     trainView->setRide(ride);

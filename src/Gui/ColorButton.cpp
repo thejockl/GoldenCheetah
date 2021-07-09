@@ -22,6 +22,8 @@
 #include <QPainter>
 #include <QColorDialog>
 #include <QTreeWidget>
+#include <QLineEdit>
+#include <QLabel>
 
 ColorButton::ColorButton(QWidget *parent, QString name, QColor color, bool gc, bool ignore) : QPushButton("", parent), gc(gc), color(color), name(name)
 {
@@ -94,6 +96,12 @@ GColorDialog::GColorDialog(QColor selected, QWidget *parent) : QDialog(parent), 
     gcdialog = new QWidget(this);
     tabwidget->addTab(gcdialog, tr("Standard"));
     QVBoxLayout *gclayout = new QVBoxLayout(gcdialog);
+    QHBoxLayout *searchLayout = new QHBoxLayout();
+    gclayout->addLayout(searchLayout);
+    QLabel *searchLabel = new QLabel(tr("Search"), this);
+    searchLayout->addWidget(searchLabel);
+    searchEdit = new QLineEdit(this);
+    searchLayout->addWidget(searchEdit);
     colorlist= new QTreeWidget(this);
     gclayout->addWidget(colorlist);
     QHBoxLayout *buttons = new QHBoxLayout();
@@ -153,9 +161,34 @@ GColorDialog::GColorDialog(QColor selected, QWidget *parent) : QDialog(parent), 
     connect(ok, SIGNAL(clicked()), this, SLOT(gcOKClicked()));
     connect(cancel, SIGNAL(clicked()), this, SLOT(cancelClicked()));
     connect(colordialog, SIGNAL(colorSelected(QColor)), this, SLOT(standardOKClicked(QColor)));
+    connect(searchEdit, SIGNAL(textChanged(QString)), this, SLOT(searchFilter(QString)));
 
     // we ready
     show();
+}
+
+void
+GColorDialog::searchFilter(QString text)
+{
+    QStringList toks = text.split(" ", Qt::SkipEmptyParts);
+    bool empty;
+    if (toks.count() == 0 || text == "") empty=true;
+    else empty=false;
+
+    for(int i=0; i<colorlist->invisibleRootItem()->childCount(); i++) {
+        if (empty) colorlist->setRowHidden(i, colorlist->rootIndex(), false);
+        else {
+            QString text = colorlist->invisibleRootItem()->child(i)->text(0);
+            bool found=false;
+            foreach(QString tok, toks) {
+                if (text.contains(tok, Qt::CaseInsensitive)) {
+                    found = true;
+                    break;
+                }
+            }
+            colorlist->setRowHidden(i, colorlist->rootIndex(), !found);
+        }
+    }
 }
 
 QColor GColorDialog::getColor(QColor color)

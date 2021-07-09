@@ -30,6 +30,7 @@
 #include "Overview.h" // for special case of Overview defaults
 #include "ChartBar.h"
 #include "Utils.h"
+#include "SearchBox.h"
 
 // When ESC pressed during R processing we cancel it
 #ifdef GC_WANT_R
@@ -50,7 +51,7 @@ static const int tileSpacing = 10;
 
 Perspective::Perspective(Context *context, QString title, int type) :
     GcWindow(context), context(context), active(false),  clicked(NULL), dropPending(false),
-    type(type), title(title), chartCursor(-2)
+    type_(type), title_(title), chartCursor(-2), df(NULL), expression_("")
 {
     // setup control area
     QWidget *cw = new QWidget(this);
@@ -76,10 +77,10 @@ Perspective::Perspective(Context *context, QString title, int type) :
     cl->addWidget(controlStack);
     setControls(cw);
 
-    switch(this->type) {
+    switch(this->type_) {
     case VIEW_ANALYSIS: view="analysis"; break;
     case VIEW_DIARY: view="diary"; break;
-    case VIEW_HOME: view="home"; break;
+    case VIEW_TRENDS: view="home"; break;
     case VIEW_TRAIN: view="train"; break;
     }
     setProperty("isManager", true);
@@ -174,7 +175,7 @@ Perspective::Perspective(Context *context, QString title, int type) :
     connect(titleEdit, SIGNAL(textChanged(const QString&)), SLOT(titleChanged()));
 
     // trends view we should select a library chart when a chart is selected.
-    if (type == VIEW_HOME) connect(context, SIGNAL(presetSelected(int)), this, SLOT(presetSelected(int)));
+    if (type == VIEW_TRENDS) connect(context, SIGNAL(presetSelected(int)), this, SLOT(presetSelected(int)));
 
     // Allow realtime controllers to scroll train view with steering movements
     if (type == VIEW_TRAIN) connect(context, SIGNAL(steerScroll(int)), this, SLOT(steerScroll(int)));
@@ -349,6 +350,7 @@ Perspective::rideSelected()
 {
     // we need to notify of null rides immediately
     if (!myRideItem || isVisible()) {
+
         for (int i=0; i < charts.count(); i++) {
 
             // show if its not a tab
@@ -660,6 +662,7 @@ Perspective::addChart(GcChartWindow* newone)
         newone->setProperty("ride", QVariant::fromValue<RideItem*>(notconst));
         newone->setProperty("dateRange", property("dateRange"));
         newone->setProperty("style", currentStyle);
+        newone->setProperty("perspective", QVariant::fromValue<Perspective*>(this));
 
         // add to tabs
         switch (currentStyle) {
@@ -749,8 +752,23 @@ Perspective::addChart(GcChartWindow* newone)
     active = false;
 }
 
+GcChartWindow *
+Perspective::takeChart(GcChartWindow *chart)
+{
+    // lets find it...
+    int index = charts.indexOf(chart);
+
+    if (index >= 0) {
+        removeChart(index, false, true);
+        return chart;
+    }
+
+    // failed to find it
+    return NULL;
+}
+
 bool
-Perspective::removeChart(int num, bool confirm)
+Perspective::removeChart(int num, bool confirm, bool keep)
 {
     if (num >= charts.count()) return false; // out of bounds (!)
 
@@ -791,8 +809,10 @@ Perspective::removeChart(int num, bool confirm)
         default:
             break; // never reached
     }
-    ((GcChartWindow*)(charts[num]))->close(); // disconnect
-    ((GcChartWindow*)(charts[num]))->deleteLater();
+
+    ((GcChartWindow*)(charts[num]))->close(); // disconnect chart
+    ((GcChartWindow*)(charts[num]))->removeEventFilter(this); // stop watching events
+    if (!keep) ((GcChartWindow*)(charts[num]))->deleteLater();
     charts.removeAt(num);
 
     update();
@@ -1193,6 +1213,12 @@ GcWindowDialog::GcWindowDialog(GcWinID type, Context *context, GcChartWindow **h
     title->setText(GcWindowRegistry::title(type));
 
     win = GcWindowRegistry::newGcWindow(type, context);
+
+    // before we do anything, we need to set the perspective, in case
+    // the chart uses it to decide something - apologies for the convoluted
+    // method to determine the perspective, but its rare to use this outside
+    // the context of a chart or a view
+    win->setProperty("perspective", QVariant::fromValue<Perspective*>(context->mainWindow->athleteTab()->view(context->mainWindow->athleteTab()->currentView())->page()));
     chartLayout->addWidget(win);
     //win->setFrameStyle(QFrame::Box);
 
@@ -1394,6 +1420,181 @@ Perspective::presetSelected(int n)
 }
 
 /*--------------------------------------------------------------------------------
+ *  Import and Export the Perspective to xml
+ * -----------------------------------------------------------------------------*/
+Perspective *Perspective::fromFile(Context *context, QString filename, int type)
+{
+    Perspective *returning = NULL;
+
+    QFileInfo finfo(filename);
+    QString content = "";
+
+    // no such file
+    if (!finfo.exists()) return returning;
+
+    QFile file(filename);
+    if (file.open(QIODevice::ReadOnly)) {
+        content = file.readAll();
+        file.close();
+    } else return returning;
+
+    // parse the content
+    QXmlInputSource source;
+    source.setData(content);
+    QXmlSimpleReader xmlReader;
+    ViewParser handler(context, type, false);
+    xmlReader.setContentHandler(&handler);
+    xmlReader.setErrorHandler(&handler);
+
+    // parse and instantiate the charts
+    xmlReader.parse(source);
+
+    // none loaded ?
+    if (handler.perspectives.count() == 0) return returning;
+
+    // return the first one with the right type (if there are multiple)
+    for(int i=0; i<handler.perspectives.count(); i++)
+        if (returning == NULL && handler.perspectives[i]->type_ == type)
+            returning = handler.perspectives[i];
+
+    // delete any further perspectives
+    for(int i=0; i<handler.perspectives.count(); i++)
+        if (handler.perspectives[i] != returning)
+            delete (handler.perspectives[i]);
+
+    // return it, but bear in mind it hasn't been initialised (current ride, date range etc)
+    return returning;
+}
+
+bool
+Perspective::toFile(QString filename)
+{
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly)) return false;
+
+    // truncate and use 8bit encoding
+    file.resize(0);
+    QTextStream out(&file);
+    out.setCodec("UTF-8");
+
+    // write to output stream
+    toXml(out);
+
+    // all done
+    file.close();
+
+    return true;
+}
+
+void
+Perspective::toXml(QTextStream &out)
+{
+    out<<"<layout name=\""<< title_ <<"\" style=\"" << currentStyle
+       <<"\" type=\"" << type_<<"\" expression=\"" << Utils::xmlprotect(expression_) << "\">\n";
+
+    // iterate over charts
+    foreach (GcChartWindow *chart, charts) {
+        GcWinID type = chart->property("type").value<GcWinID>();
+
+        out<<"\t<chart id=\""<<static_cast<int>(type)<<"\" "
+           <<"name=\""<<Utils::xmlprotect(chart->property("instanceName").toString())<<"\" "
+           <<"title=\""<<Utils::xmlprotect(chart->property("title").toString())<<"\" >\n";
+
+        // iterate over chart properties
+        const QMetaObject *m = chart->metaObject();
+        for (int i=0; i<m->propertyCount(); i++) {
+            QMetaProperty p = m->property(i);
+            if (p.isUser(chart)) {
+               out<<"\t\t<property name=\""<<Utils::xmlprotect(p.name())<<"\" "
+                  <<"type=\""<<p.typeName()<<"\" "
+                  <<"value=\"";
+
+                if (QString(p.typeName()) == "int") out<<p.read(chart).toInt();
+                if (QString(p.typeName()) == "double") out<<p.read(chart).toDouble();
+                if (QString(p.typeName()) == "QDate") out<<p.read(chart).toDate().toString();
+                if (QString(p.typeName()) == "QString") out<<Utils::xmlprotect(p.read(chart).toString());
+                if (QString(p.typeName()) == "bool") out<<p.read(chart).toBool();
+                if (QString(p.typeName()) == "LTMSettings") {
+                    QByteArray marshall;
+                    QDataStream s(&marshall, QIODevice::WriteOnly);
+                    LTMSettings x = p.read(chart).value<LTMSettings>();
+                    s << x;
+                    out<<marshall.toBase64();
+                }
+
+                out<<"\" />\n";
+            }
+        }
+        out<<"\t</chart>\n";
+    }
+    out<<"</layout>\n";
+}
+
+/*--------------------------------------------------------------------------------
+ *  Using an expression to switch/filter content
+ * -----------------------------------------------------------------------------*/
+
+QString
+Perspective::expression() const
+{
+    return expression_;
+}
+
+void
+Perspective::setExpression(QString expr)
+{
+    if (expression_ == expr) return;
+
+    if (df) {
+        delete df;
+        df = NULL;
+    }
+    expression_ = expr;
+
+    // non-blanks
+    if (expression_ != "")
+        df = new DataFilter(this, context, expression_);
+
+    // notify charts that the filter changed
+    // but only for trends views where it matters
+    if (type_ == VIEW_TRENDS)
+        foreach(GcWindow *chart, charts)
+            chart->notifyPerspectiveFilterChanged(expression_);
+}
+
+bool
+Perspective::relevant(RideItem *item)
+{
+    if (type_ != VIEW_ANALYSIS) return true;
+    else if (df == NULL) return false;
+    else if (df == NULL || item == NULL) return false;
+
+    // validate
+    Result ret = df->evaluate(item, NULL);
+    return ret.number();
+
+}
+
+QStringList
+Perspective::filterlist(DateRange dr)
+{
+    QStringList returning;
+
+    Specification spec;
+    spec.setDateRange(dr);
+
+    foreach(RideItem *item, context->athlete->rideCache->rides()) {
+        if (!spec.pass(item)) continue;
+
+        // if no filter, or the filter passes add to count
+        if (!isFiltered() || df->evaluate(item, NULL).number() != 0)
+            returning << item->fileName;
+    }
+
+    return returning;
+}
+
+/*--------------------------------------------------------------------------------
  *  Import Chart Dialog - select/deselect charts before importing them
  * -----------------------------------------------------------------------------*/
 ImportChartDialog::ImportChartDialog(Context *context, QList<QMap<QString,QString> >list, QWidget *parent) : QDialog(parent), context(context), list(list)
@@ -1524,7 +1725,7 @@ ImportChartDialog::importClicked()
             }
 
             int x=0;
-            if (view == tr("Trends"))      { x=0; context->mainWindow->selectHome(); }
+            if (view == tr("Trends"))      { x=0; context->mainWindow->selectTrends(); }
             if (view == tr("Activities"))  { x=1; context->mainWindow->selectAnalysis(); }
             if (view == tr("Diary"))       { x=2; context->mainWindow->selectDiary(); }
             if (view == tr("Train"))       { x=3; context->mainWindow->selectTrain(); }
@@ -1542,11 +1743,12 @@ ImportChartDialog::cancelClicked()
     accept();
 }
 
-AddPerspectiveDialog::AddPerspectiveDialog(Context *context, QString &name) :
-    context(context), name(name)
+AddPerspectiveDialog::AddPerspectiveDialog(QWidget *parent, Context *context, QString &name, QString &expression, int type, bool edit) :
+    QDialog(parent), context(context), name(name), expression(expression), type(type)
 {
     setWindowFlags(windowFlags());
-    setWindowTitle(tr("Add Perspective"));
+    if (edit) setWindowTitle(tr("Edit Perspective"));
+    else setWindowTitle(tr("Add Perspective"));
     setWindowModality(Qt::ApplicationModal);
     setMinimumWidth(200 * dpiXFactor);
 
@@ -1558,8 +1760,18 @@ AddPerspectiveDialog::AddPerspectiveDialog(Context *context, QString &name) :
     form->addRow(new QLabel(tr("Perspective Name")), nameEdit);
     layout->addLayout(form);
 
+    if (type == VIEW_ANALYSIS || type == VIEW_TRENDS) {
+        filterEdit = new SearchBox(context, this);
+        filterEdit->setFixedMode(true);
+        filterEdit->setMode(SearchBox::Filter);
+        filterEdit->setText(expression);
+        if (type == VIEW_ANALYSIS) form->addRow(new QLabel(tr("Switch expression")), filterEdit);
+        if (type == VIEW_TRENDS) form->addRow(new QLabel(tr("Activities filter")), filterEdit);
+    }
+
     QHBoxLayout *buttons = new QHBoxLayout();
-    add = new QPushButton(tr("Add"), this);
+    if (edit) add = new QPushButton(tr("OK"), this);
+    else add = new QPushButton(tr("Add"), this);
     cancel = new QPushButton(tr("Cancel"), this);
     buttons->addStretch();
     buttons->addWidget(cancel);
@@ -1574,6 +1786,7 @@ void
 AddPerspectiveDialog::addClicked()
 {
     name = nameEdit->text();
+    if (type == VIEW_ANALYSIS || type == VIEW_TRENDS) expression = filterEdit->text();
     accept();
 }
 

@@ -35,6 +35,7 @@ class Tab;
 class ViewSplitter;
 class Context;
 class BlankStatePage;
+class PerspectiveDialog;
 
 class TabView : public QWidget
 {
@@ -45,6 +46,7 @@ class TabView : public QWidget
     Q_PROPERTY(bool selected READ isSelected WRITE setSelected USER true) // make this last always
 
     friend class ::MainWindow;
+    friend class ::PerspectiveDialog;
 
     public:
 
@@ -56,7 +58,7 @@ class TabView : public QWidget
         void setSidebar(QWidget *sidebar);
         QWidget *sidebar() { return sidebar_; }
         void setPages(QStackedWidget *pages);
-        Perspective *page() { return page_;}
+        Perspective *page() { return perspective_;}
         void setBlank(BlankStatePage *blank);
         BlankStatePage *blank() { return blank_; }
         void setBottom(QWidget *bottom);
@@ -74,12 +76,15 @@ class TabView : public QWidget
         // load/save perspectives
         void restoreState(bool useDefault = false);
         void saveState();
+        void appendPerspective(Perspective *page);
 
         void setPerspectives(QComboBox *perspectiveSelector); // set the combobox when view selected
         void perspectiveSelected(int index); // combobox selections changed because the user selected a perspective
 
         // add a new perspective
-        void addPerspective(QString);
+        Perspective *addPerspective(QString);
+        void removePerspective(Perspective *);
+        void swapPerspective(int from, int to); // reorder by moving 1 pos at a time
 
         // bottom
         void dragEvent(bool); // showbottom on drag event
@@ -98,7 +103,10 @@ class TabView : public QWidget
 
         int viewType() { return type; }
 
-        void importChart(QMap<QString,QString>properties, bool select) { page_->importChart(properties, select); }
+        void importChart(QMap<QString,QString>properties, bool select) { perspective_->importChart(properties, select); }
+
+        bool importPerspective(QString filename);
+        void exportPerspective(Perspective *, QString filename);
 
     signals:
 
@@ -134,7 +142,7 @@ class TabView : public QWidget
     protected:
 
         Context *context;
-        int type; // used by windowregistry; e.g VIEW_TRAIN VIEW_ANALYSIS VIEW_DIARY VIEW_HOME
+        int type; // used by windowregistry; e.g VIEW_TRAIN VIEW_ANALYSIS VIEW_DIARY VIEW_TRENDS
                   // we don't care what values are pass through to the GcWindowRegistry to decide
                   // what charts are relevant for this view.
 
@@ -158,8 +166,8 @@ class TabView : public QWidget
         QWidget *sidebar_;
         QWidget *bottom_;
 
-        Perspective *page_; // currently selected page
-        QList<Perspective *> pages_;
+        Perspective *perspective_; // currently selected page
+        QList<Perspective *> perspectives_;
 
         // the perspectives are stacked- charts and their associatated controls
         QStackedWidget *pstack, *cstack;
@@ -177,7 +185,7 @@ class ViewParser : public QXmlDefaultHandler
 {
 
 public:
-    ViewParser(Context *context) : style(2), context(context) {}
+    ViewParser(Context *context, int type, bool useDefault) : style(2), context(context), type(type), useDefault(useDefault) {}
 
     // the results!
     QList<Perspective*> perspectives;
@@ -194,6 +202,8 @@ protected:
     Context *context;
     GcChartWindow *chart;
     Perspective *page; // current
+    int type; // what type of view is this VIEW_{HOME,ANALYSIS,DIARY,TRAIN}
+    bool useDefault; // force a reset by using the default layouts
 
 };
 // we make our own view splitter for the bespoke handle

@@ -26,6 +26,7 @@
 #include "TrainDB.h"
 #include "ComparePane.h"
 #include "TrainBottom.h"
+#include "Specification.h"
 
 #include <QDesktopWidget>
 extern QDesktopWidget *desktop;
@@ -70,7 +71,34 @@ AnalysisView::~AnalysisView()
 void
 AnalysisView::setRide(RideItem *ride)
 {
+    // when ride selected, but not from the sidebar.
     static_cast<AnalysisSidebar*>(sidebar())->setRide(ride); // save settings
+
+    // if we are the current view and the current perspective is no longer relevant
+    // then lets go find one to switch to..
+    if (context->mainWindow->athleteTab()->currentView() == 1 && page()->relevant(ride) != true) {
+
+        // lets find one to switch to
+        Perspective *found=page();
+        foreach(Perspective *p, perspectives_){
+            if (p->relevant(ride)) {
+                found =p;
+                break;
+            }
+        }
+
+        // none of them want to be selected, so we can stay on the current one
+        // so long as it doesn't have an expression that failed...
+        if (found == page() && page()->expression() != "")
+            found = perspectives_[0];
+
+        // if we need to switch, i.e. not already on it
+        if (found != page())  {
+            context->mainWindow->switchPerspective(perspectives_.indexOf(found));
+        }
+    }
+
+    // tell the perspective we have selected a ride
     page()->setProperty("ride", QVariant::fromValue<RideItem*>(dynamic_cast<RideItem*>(ride)));
 }
 
@@ -149,7 +177,7 @@ DiaryView::isBlank()
     else return true;
 }
 
-HomeView::HomeView(Context *context, QStackedWidget *controls) : TabView(context, VIEW_HOME)
+TrendsView::TrendsView(Context *context, QStackedWidget *controls) : TabView(context, VIEW_TRENDS)
 {
     sidebar = new LTMSidebar(context);
     BlankStateHomePage *b = new BlankStateHomePage(context);
@@ -173,7 +201,7 @@ HomeView::HomeView(Context *context, QStackedWidget *controls) : TabView(context
     connect(bottomSplitter(), SIGNAL(compareClear()), bottom(), SLOT(clear()));
 }
 
-HomeView::~HomeView()
+TrendsView::~TrendsView()
 {
     appsettings->setValue(GC_SETTINGS_MAIN_SIDEBAR "trend", _sidebar);
     delete sidebar;
@@ -181,28 +209,73 @@ HomeView::~HomeView()
 }
 
 void
-HomeView::compareChanged(bool state)
+TrendsView::compareChanged(bool state)
 {
     // we turned compare on / off
     context->notifyCompareDateRanges(state);
 }
 
-void
-HomeView::dateRangeChanged(DateRange dr)
+int
+TrendsView::countActivities(Perspective *perspective, DateRange dr)
 {
+    // get the filterset for the current daterange
+    // using the data filter expression
+    int returning=0;
+    bool filtered= perspective->df != NULL;
+
+    Specification spec;
+    FilterSet fs;
+    fs.addFilter(context->isfiltered, context->filters);
+    fs.addFilter(context->ishomefiltered, context->homeFilters);
+    spec.setDateRange(dr);
+    spec.setFilterSet(fs);
+
+    foreach(RideItem *item, context->athlete->rideCache->rides()) {
+        if (!spec.pass(item)) continue;
+
+        // if no filter, or the filter passes add to count
+        if (!filtered || perspective->df->evaluate(item, NULL).number() != 0)
+            returning++;
+    }
+    return returning;
+
+}
+
+void
+TrendsView::dateRangeChanged(DateRange dr)
+{
+#if 0 // commented out auto switching perspectives on trends because it was annoying...
+    // if there are no activities for the current perspective
+    // lets switch to one that has the most
+    if (countActivities(page(), dr) == 0) {
+
+        int max=0;
+        int index=perspectives_.indexOf(page());
+        int switchto=index;
+        for (int i=0; i<perspectives_.count(); i++) {
+            int count = countActivities(perspectives_[i], dr);
+            if (count > max) { max=count; switchto=i; }
+        }
+
+        // if we found a better one
+        if (index != switchto)  context->mainWindow->switchPerspective(switchto);
+    }
+#endif
+
+    // Once the right perspective is set, we can go ahead and update everyone
     emit dateChanged(dr);
     context->notifyDateRangeChanged(dr);
     if (loaded) page()->setProperty("dateRange", QVariant::fromValue<DateRange>(dr));
 }
 bool
-HomeView::isBlank()
+TrendsView::isBlank()
 {
     if (context->athlete->rideCache->rides().count() > 0) return false;
     else return true;
 }
 
 void
-HomeView::justSelected()
+TrendsView::justSelected()
 {
     if (isSelected()) {
         // force date range refresh

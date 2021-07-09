@@ -100,6 +100,9 @@ class MainWindow : public QMainWindow
         // tab view keeps this up to date
         QAction *showhideSidebar;
 
+        // switch perspective
+        void switchPerspective(int index);
+
     protected:
 
         // used by ChooseCyclistDialog to see which athletes
@@ -143,6 +146,11 @@ class MainWindow : public QMainWindow
 
         // perspective selected
         void perspectiveSelected(int index);
+        void perspectivesChanged(); // when the list of perspectives is updated in PerspectivesDialog
+
+        // import and export perspectives
+        void exportPerspective();
+        void importPerspective();
 
         // chart importing
         void importCharts(QStringList);
@@ -178,7 +186,7 @@ class MainWindow : public QMainWindow
         void clearFilter();
 
         void selectAthlete();
-        void selectHome();
+        void selectTrends();
         void selectDiary();
         void selectAnalysis();
         void selectTrain();

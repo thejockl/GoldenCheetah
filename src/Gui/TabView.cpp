@@ -38,7 +38,7 @@ TabView::TabView(Context *context, int type) :
     _sidebar(true), _tiled(false), _selected(false), lastHeight(130*dpiYFactor), sidewidth(0),
     active(false), bottomRequested(false), bottomHideOnIdle(false), perspectiveactive(false),
     stack(NULL), splitter(NULL), mainSplitter(NULL), 
-    sidebar_(NULL), bottom_(NULL), page_(NULL), blank_(NULL),
+    sidebar_(NULL), bottom_(NULL), perspective_(NULL), blank_(NULL),
     loaded(false)
 {
     // setup the basic widget
@@ -65,7 +65,7 @@ TabView::TabView(Context *context, int type) :
     stack->insertWidget(0, splitter); // splitter always at index 0
 
     QString heading = tr("Compare Activities and Intervals");
-    if (type == VIEW_HOME) heading = tr("Compare Date Ranges");
+    if (type == VIEW_TRENDS) heading = tr("Compare Date Ranges");
     else if (type == VIEW_TRAIN) heading = tr("Intensity Adjustments and Workout Control");
 
     mainSplitter = new ViewSplitter(Qt::Vertical, heading, this);
@@ -87,14 +87,19 @@ TabView::~TabView()
 {
     saveState(); // writes xxx-perspectives.xml
 
-    foreach(Perspective *p, pages_) delete p;
-    pages_.clear();
+    foreach(Perspective *p, perspectives_) delete p;
+    perspectives_.clear();
 }
 
+// this generally gets re-implemented in the view, so e.g. AnalysisView
+// has its own version of this method that switches perspective to match
+// the type of activity based upon the perspective's associated "switch expression".
 void
 TabView::setRide(RideItem*ride)
 {
-    if (loaded) page()->setProperty("ride", QVariant::fromValue<RideItem*>(dynamic_cast<RideItem*>(ride)));
+    if (loaded) {
+        page()->setProperty("ride", QVariant::fromValue<RideItem*>(dynamic_cast<RideItem*>(ride)));
+    }
 }
 
 void
@@ -271,7 +276,7 @@ TabView::saveState()
     case VIEW_ANALYSIS: view = "analysis"; break;
     case VIEW_TRAIN: view = "train"; break;
     case VIEW_DIARY: view = "diary"; break;
-    case VIEW_HOME: view = "home"; break;
+    case VIEW_TRENDS: view = "home"; break;
     }
 
     QString filename = context->athlete->home->config().canonicalPath() + "/" + view + "-perspectives.xml";
@@ -292,46 +297,10 @@ TabView::saveState()
     out<<"<layouts>\n";
 
     // so lets run through the perspectives
-    foreach(Perspective *page, pages_) {
+    foreach(Perspective *page, perspectives_) {
 
-        out<<"<layout name=\""<< page->title <<"\" style=\"" << page->currentStyle <<"\">\n";
-
-        // iterate over charts
-        foreach (GcChartWindow *chart, page->charts) {
-            GcWinID type = chart->property("type").value<GcWinID>();
-
-            out<<"\t<chart id=\""<<static_cast<int>(type)<<"\" "
-               <<"name=\""<<Utils::xmlprotect(chart->property("instanceName").toString())<<"\" "
-               <<"title=\""<<Utils::xmlprotect(chart->property("title").toString())<<"\" >\n";
-
-            // iterate over chart properties
-            const QMetaObject *m = chart->metaObject();
-            for (int i=0; i<m->propertyCount(); i++) {
-                QMetaProperty p = m->property(i);
-                if (p.isUser(chart)) {
-                   out<<"\t\t<property name=\""<<Utils::xmlprotect(p.name())<<"\" "
-                      <<"type=\""<<p.typeName()<<"\" "
-                      <<"value=\"";
-
-                    if (QString(p.typeName()) == "int") out<<p.read(chart).toInt();
-                    if (QString(p.typeName()) == "double") out<<p.read(chart).toDouble();
-                    if (QString(p.typeName()) == "QDate") out<<p.read(chart).toDate().toString();
-                    if (QString(p.typeName()) == "QString") out<<Utils::xmlprotect(p.read(chart).toString());
-                    if (QString(p.typeName()) == "bool") out<<p.read(chart).toBool();
-                    if (QString(p.typeName()) == "LTMSettings") {
-                        QByteArray marshall;
-                        QDataStream s(&marshall, QIODevice::WriteOnly);
-                        LTMSettings x = p.read(chart).value<LTMSettings>();
-                        s << x;
-                        out<<marshall.toBase64();
-                    }
-
-                    out<<"\" />\n";
-                }
-            }
-            out<<"\t</chart>\n";
-        }
-        out<<"</layout>\n";
+        // write to output stream
+        page->toXml(out);
     }
     out<<"</layouts>\n";
     file.close();
@@ -345,7 +314,7 @@ TabView::restoreState(bool useDefault)
     case VIEW_ANALYSIS: view = "analysis"; break;
     case VIEW_TRAIN: view = "train"; break;
     case VIEW_DIARY: view = "diary"; break;
-    case VIEW_HOME: view = "home"; break;
+    case VIEW_TRENDS: view = "home"; break;
     }
 
     // restore window state
@@ -419,6 +388,7 @@ TabView::restoreState(bool useDefault)
 
     // if we *still* don't have content then something went
     // badly wrong, so only reset if its not blank
+    QList<Perspective*>restored;
     if (content != "") {
 
         // whilst this happens don't show user
@@ -428,31 +398,25 @@ TabView::restoreState(bool useDefault)
         QXmlInputSource source;
         source.setData(content);
         QXmlSimpleReader xmlReader;
-        ViewParser handler(context);
+        ViewParser handler(context, type, useDefault);
         xmlReader.setContentHandler(&handler);
         xmlReader.setErrorHandler(&handler);
 
         // parse and instantiate the charts
         xmlReader.parse(source);
-        pages_ = handler.perspectives;
+        restored = handler.perspectives;
 
     }
-    if (legacy && pages_.count() == 1) pages_[0]->title = "General";
+    if (legacy && restored.count() == 1) restored[0]->title_ = "General";
 
-    if (pages_.count() == 0) {
-        page_ = new Perspective(context, "empty", type);
-        pages_ << page_;
-    }
+    // MUST have at least one
+    if (restored.count() == 0)  restored << new Perspective(context, "empty", type);
 
-    // add to stack
-    foreach(Perspective *page, pages_) {
-        pstack->addWidget(page);
-        cstack->addWidget(page->controls());
-        page->configChanged(0); // set colors correctly- will have missed from startup
-    }
+    // initialise them
+    foreach(Perspective *page, restored) appendPerspective(page);
 
     // default to first one
-    page_ = pages_[0];
+    perspective_ = perspectives_[0];
 
     // if this is analysis view then lets select the first ride now
     if (type == VIEW_ANALYSIS) {
@@ -471,10 +435,39 @@ TabView::restoreState(bool useDefault)
             context->athlete->selectRideFile(context->athlete->rideCache->rides().last()->fileName);
         }
     }
-
 }
 
 void
+TabView::appendPerspective(Perspective *page)
+{
+    perspectives_ << page;
+    pstack->addWidget(page);
+    cstack->addWidget(page->controls());
+    page->configChanged(0); // set colors correctly- will have missed from startup
+}
+
+bool
+TabView::importPerspective(QString filename)
+{
+    Perspective *newone = Perspective::fromFile(context, filename, type);
+    if (newone) {
+        appendPerspective(newone);
+        return true;
+    } else {
+        // no valid perspective found for this view... (maybe its for another type of view)
+        QMessageBox::information(this, tr("Perspective Import"), tr("No perspectives found that are appropriate for the current view."));
+        return false;
+    }
+}
+
+void
+TabView::exportPerspective(Perspective *p, QString filename)
+{
+    // write to file
+    p->toFile(filename);
+}
+
+Perspective *
 TabView::addPerspective(QString name)
 {
     Perspective *page = new Perspective(context, name, type);
@@ -483,10 +476,75 @@ TabView::addPerspective(QString name)
     if (type == VIEW_TRAIN) page->styleChanged(2);
     else page->styleChanged(0);
 
-    pages_ << page;
-    pstack->addWidget(page);
-    cstack->addWidget(page->controls());
-    page->configChanged(0); // set colors correctly- will be empty...
+    // append
+    appendPerspective(page);
+    return page;
+}
+
+void
+TabView::removePerspective(Perspective *p)
+{
+    if (perspectives_.count() == 1) return; // not allowed to have zero perspectives mate
+
+    int index = perspectives_.indexOf(p);
+
+    if (index < 0) return; // doesn't even exist
+
+    if (p == perspective_) { // need to switch before we zap it!
+        Perspective *original = perspective_;
+
+        // switch one after this one (if it exists)
+        if (index < (perspectives_.count()-1)) perspective_ = perspectives_[index + 1];
+        else if (index > 0) perspective_ = perspectives_[index -1];
+        else return; // no no no ???
+
+        // switch to another
+        if (original != perspective_)  perspectiveSelected(perspectives_.indexOf(perspective_));
+
+    }
+
+    // we can now remove from view
+    pstack->removeWidget(p);
+    cstack->removeWidget(p->controls());
+
+    // and model
+    perspectives_.removeAt(index);
+    delete p;
+}
+
+void
+TabView::swapPerspective(int from, int to) // is actually swapping as only move 1 position at a time
+{
+    if (from == to) return; // nowt to do in this case.
+
+    // make from always < to
+    if (from > to) {
+        int hold=from;
+        from = to;
+        to = hold;
+    }
+
+    // is from selected?
+    if (perspectives_[from] == perspective_) {
+        // remove and re-add to
+        QWidget *w = cstack->widget(to);
+        cstack->removeWidget(w);
+        cstack->insertWidget(from, w);
+        w = pstack->widget(to);
+        pstack->removeWidget(w);
+        pstack->insertWidget(from, w);
+    } else {
+        // remove and re-add from
+        QWidget *w = cstack->widget(from);
+        cstack->removeWidget(w);
+        cstack->insertWidget(to, w);
+        w = pstack->widget(from);
+        pstack->removeWidget(w);
+        pstack->insertWidget(to, w);
+    }
+    Perspective *hold = perspectives_[from];
+    perspectives_[from] = perspectives_[to];
+    perspectives_[to] = hold;
 }
 
 void
@@ -660,22 +718,28 @@ TabView::setPerspectives(QComboBox *perspectiveSelector)
     if (!loaded)  restoreState(false);
 
     perspectiveSelector->clear();
-    foreach(Perspective *page, pages_) {
-        perspectiveSelector->addItem(page->title);
+    foreach(Perspective *page, perspectives_) {
+        perspectiveSelector->addItem(page->title_);
     }
     perspectiveSelector->addItem("Add New Perspective...");
     perspectiveSelector->addItem("Manage Perspectives...");
-    perspectiveSelector->insertSeparator(pages_.count());
+    perspectiveSelector->insertSeparator(perspectives_.count());
     perspectiveactive=false;
 
     // if we only just loaded the charts and views, we need to select
     // one to get the ride item and date range selected
     if (!loaded) {
         loaded = true;
+
+        // generally we just go to the first perspective
+        // but on analysis view they get selected on the basis
+        // of the currently selected ride
+        RideItem *notconst = (RideItem*)context->currentRideItem();
         perspectiveSelected(0);
+        if (type == VIEW_ANALYSIS && notconst != NULL) setRide(notconst);
 
         // due to visibility optimisation we need to force the first tab to be selected in tab mode
-        if (page_->currentStyle == 0 && page_->charts.count()) page_->tabSelected(0);
+        if (perspective_->currentStyle == 0 && perspective_->charts.count()) perspective_->tabSelected(0);
     }
 }
 
@@ -689,11 +753,11 @@ TabView::perspectiveSelected(int index)
     // and set the date / ride property to help
     // it catch up with what it missed whilst we
     // were looking at another perspective
-    if (index < pages_.count()) {
+    if (index < perspectives_.count()) {
 
         setUpdatesEnabled(false);
 
-        page_ = pages_[index];
+        perspective_ = perspectives_[index];
 
         // switch to this perspective's charts and controls
         pstack->setCurrentIndex(index);
@@ -703,8 +767,8 @@ TabView::perspectiveSelected(int index)
 
         // set properties on the perspective as they propagate to charts
         RideItem *notconst = (RideItem*)context->currentRideItem();
-        page_->setProperty("ride", QVariant::fromValue<RideItem*>(notconst));
-        page_->setProperty("dateRange", QVariant::fromValue<DateRange>(context->currentDateRange()));
+        perspective_->setProperty("ride", QVariant::fromValue<RideItem*>(notconst));
+        perspective_->setProperty("dateRange", QVariant::fromValue<DateRange>(context->currentDateRange()));
 
         setUpdatesEnabled(true);
     }
@@ -714,7 +778,7 @@ TabView::perspectiveSelected(int index)
 void
 TabView::tileModeChanged()
 {
-    if (page_) page_->setStyle(isTiled() ? 2 : 0);
+    if (perspective_) perspective_->setStyle(isTiled() ? 2 : 0);
 }
 
 void
@@ -727,14 +791,14 @@ TabView::selectionChanged()
         context->mainWindow->showhideSidebar->setChecked(_sidebar);
 
         // or do we need to show blankness?
-        if (isBlank() && blank_ && page_ && blank_->canShow()) {
+        if (isBlank() && blank_ && perspective_ && blank_->canShow()) {
 
             splitter->hide();
             blank()->show();
 
             stack->setCurrentIndex(1);
 
-        } else if (blank_ && page_) {
+        } else if (blank_ && perspective_) {
 
             blank()->hide();
             splitter->show();
@@ -764,7 +828,7 @@ TabView::resetLayout()
 void
 TabView::addChart(GcWinID id)
 {
-    if (page_) page_->appendChart(id);
+    if (perspective_) perspective_->appendChart(id);
 }
 
 void
@@ -830,16 +894,16 @@ bool ViewParser::endElement( const QString&, const QString&, const QString &qNam
 
         // translate the metrics, but only if the built-in "default.XML"s are read (and only for LTM charts)
         // and only if the language is not English (i.e. translation is required).
-#if 0 // XXX fixme
+
         if (useDefault && !english) {
 
             // translate the titles
-            Perspective::translateChartTitles(charts);
+            Perspective::translateChartTitles(page->charts);
 
             // translate the LTM settings
-            for (int i=0; i<charts.count(); i++) {
+            for (int i=0; i<page->charts.count(); i++) {
                 // find out if it's an LTMWindow via dynamic_cast
-                LTMWindow* ltmW = dynamic_cast<LTMWindow*> (charts[i]);
+                LTMWindow* ltmW = dynamic_cast<LTMWindow*> (page->charts[i]);
                 if (ltmW) {
                     // the current chart is an LTMWindow, let's translate
 
@@ -851,7 +915,7 @@ bool ViewParser::endElement( const QString&, const QString&, const QString &qNam
                 }
             }
         }
-#endif
+
         page->styleChanged(style);
     }
     return true;
@@ -862,6 +926,8 @@ bool ViewParser::startElement( const QString&, const QString&, const QString &na
     if (name == "layout") {
 
         QString name="General";
+        int typetouse=type;
+        QString expression;
         for(int i=0; i<attrs.count(); i++) {
             if (attrs.qName(i) == "style") {
                 style = Utils::unprotect(attrs.value(i)).toInt();
@@ -869,10 +935,17 @@ bool ViewParser::startElement( const QString&, const QString&, const QString &na
             if (attrs.qName(i) == "name") {
                 name =  Utils::unprotect(attrs.value(i));
             }
+            if (attrs.qName(i) == "expression") {
+                expression = Utils::unprotect(attrs.value(i));
+            }
+            if (attrs.qName(i) == "type") {
+                typetouse = Utils::unprotect(attrs.value(i)).toInt();
+            }
         }
 
-        // we need a new perspective
-        page = new Perspective(context, name, VIEW_HOME); //XXX fixme VIEW_HOME!!! XXX
+        // we need a new perspective for this view type
+        page = new Perspective(context, name, typetouse);
+        page->setExpression(expression);
         perspectives.append(page);
     }
     else if (name == "chart") {

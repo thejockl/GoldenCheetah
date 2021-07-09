@@ -42,6 +42,11 @@ class ChartBar;
 class LTMSettings;
 class TabView;
 class ViewParser;
+class PerspectiveDialog;
+class QTextStream;
+class DataFilter;
+class SearchBox;
+class TrendsView;
 
 class Perspective : public GcWindow
 {
@@ -49,12 +54,33 @@ class Perspective : public GcWindow
     G_OBJECT
 
     friend ::TabView;
+    friend ::TrendsView;
     friend ::ViewParser;
+    friend ::PerspectiveDialog;
 
     public:
 
         Perspective(Context *, QString title, int type);
         ~Perspective();
+
+        // am I relevant? (for switching when ride selected)
+        bool relevant(RideItem*);
+
+        // the items I'd choose (for filtering on trends view)
+        bool isFiltered() const override { return (type_ == VIEW_TRENDS && df != NULL); }
+        QStringList filterlist(DateRange dr);
+
+        // get/set the expression (will compile df)
+        QString expression() const;
+        void setExpression(QString);
+
+        // import and export
+        static Perspective *fromFile(Context *context, QString filename, int type);
+        bool toFile(QString filename);
+        void toXml(QTextStream &out);
+
+        int type() const { return type_; }
+        QString title() const { return title_; }
 
         void resetLayout();
         void importChart(QMap<QString,QString> properties, bool select);
@@ -91,7 +117,8 @@ class Perspective : public GcWindow
         void addChart(GcChartWindow* newone);
         void addChartFromMenu(QAction*action); // called with an action
         void appendChart(GcWinID id); // called from Context *to inset chart
-        bool removeChart(int, bool confirm = true);
+        bool removeChart(int, bool confirm = true, bool keep = false);
+        GcChartWindow *takeChart(GcChartWindow *wndow); // remove from view, but do not delete
         void titleChanged();
 
         // window wants to close...
@@ -122,11 +149,11 @@ class Perspective : public GcWindow
         bool dropPending;
 
         // what are we?
-        int type;
+        int type_;
         QString view;
 
         // top bar
-        QString title;
+        QString title_;
         QLineEdit *titleEdit;
 
         QComboBox *styleSelector;
@@ -149,8 +176,14 @@ class Perspective : public GcWindow
         QList<GcChartWindow*> charts;
         int chartCursor;
 
+        // expression
+        DataFilter *df;
+        QString expression_;
+
         static void translateChartTitles(QList<GcChartWindow*> charts);
 };
+
+Q_DECLARE_METATYPE(Perspective*);
 
 // setup the chart
 class GcWindowDialog : public QDialog
@@ -209,10 +242,11 @@ class AddPerspectiveDialog : public QDialog
     Q_OBJECT
 
     public:
-        AddPerspectiveDialog(Context *context, QString &name);
+        AddPerspectiveDialog(QWidget *parent, Context *context, QString &name, QString &expression, int type, bool edit=false);
 
     protected:
         QLineEdit *nameEdit;
+        SearchBox *filterEdit;
         QPushButton *add, *cancel;
 
     public slots:
@@ -222,5 +256,7 @@ class AddPerspectiveDialog : public QDialog
     private:
         Context *context;
         QString &name;
+        QString &expression;
+        int type;
 };
 #endif // _GC_HomeWindow_h

@@ -518,6 +518,10 @@ CriticalPowerWindow::CriticalPowerWindow(Context *context, bool rangemode) :
         // Compare
         connect(context, SIGNAL(compareDateRangesStateChanged(bool)), SLOT(forceReplot()));
         connect(context, SIGNAL(compareDateRangesChanged()), SLOT(forceReplot()));
+
+        connect(this, SIGNAL(perspectiveFilterChanged(QString)), this, SLOT(perspectiveFilterChanged()));
+        connect(this, SIGNAL(perspectiveChanged(Perspective*)), this, SLOT(perspectiveFilterChanged()));
+
     } else {
         // when working on a ride we can select intervals!
         connect(cComboSeason, SIGNAL(currentIndexChanged(int)), this, SLOT(seasonSelected(int)));
@@ -528,6 +532,7 @@ CriticalPowerWindow::CriticalPowerWindow(Context *context, bool rangemode) :
         // Compare
         connect(context, SIGNAL(compareIntervalsStateChanged(bool)), SLOT(forceReplot()));
         connect(context, SIGNAL(compareIntervalsChanged()), SLOT(forceReplot()));
+
     }
 
     connect(seriesCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(setSeries(int)));
@@ -1103,6 +1108,8 @@ CriticalPowerWindow::intervalSelected()
 void
 CriticalPowerWindow::intervalHover(IntervalItem* x)
 {
+    if (myRideItem == NULL) return;
+
     // ignore in compare mode
     if (!amVisible() || context->isCompareIntervals) return;
 
@@ -1750,6 +1757,7 @@ CriticalPowerWindow::dateRangeChanged(DateRange dateRange)
         fs.addFilter(searchBox->isFiltered(), SearchFilterBox::matches(context, filter()));
         fs.addFilter(context->isfiltered, context->filters);
         fs.addFilter(context->ishomefiltered, context->homeFilters);
+        fs.addFilter(myPerspective->isFiltered(), myPerspective->filterlist(dateRange));
         int nActivities, nRides, nRuns, nSwims;
         QString sport;
         context->athlete->rideCache->getRideTypeCounts(
@@ -1805,6 +1813,14 @@ void CriticalPowerWindow::seasonSelected(int iSeason)
     //XXX BROKEM CODE IN 5.1 PORT // _dateRange = season.id();
     cpPlot->setDateRange(season.getStart(), season.getEnd());
     cpPlot->setRide(currentRide);
+}
+
+void CriticalPowerWindow::perspectiveFilterChanged()
+{
+    if (rangemode) {
+        cpPlot->perspectiveFilterChanged();
+        forceReplot();
+    }
 }
 
 void CriticalPowerWindow::filterChanged()

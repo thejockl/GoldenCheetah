@@ -57,11 +57,9 @@ class QGroupBox;
 class QHBoxLayout;
 class QVBoxLayout;
 class ColorsPage;
-class IntervalMetricsPage;
 class ZonePage;
 class HrZonePage;
 class PaceZonePage;
-class SummaryMetricsPage;
 class MetadataPage;
 class KeywordsPage;
 class FieldsPage;
@@ -317,44 +315,6 @@ private:
     QLabel          *m_StatsLabelArr[StatsLastPart];
 };
 
-class BestsMetricsPage : public QWidget
-{
-    Q_OBJECT
-    G_OBJECT
-
-
-    public:
-
-        BestsMetricsPage(QWidget *parent = NULL);
-
-    public slots:
-
-        void upClicked();
-        void downClicked();
-        void leftClicked();
-        void rightClicked();
-        void availChanged();
-        void selectedChanged();
-        qint32 saveClicked();
-
-    protected:
-
-        bool changed;
-        QListWidget *availList;
-        QListWidget *selectedList;
-#ifndef Q_OS_MAC
-        QToolButton *upButton;
-        QToolButton *downButton;
-        QToolButton *leftButton;
-        QToolButton *rightButton;
-#else
-        QPushButton *upButton;
-        QPushButton *downButton;
-        QPushButton *leftButton;
-        QPushButton *rightButton;
-#endif
-};
-
 class CustomMetricsPage : public QWidget
 {
     Q_OBJECT
@@ -402,7 +362,7 @@ class CustomMetricsPage : public QWidget
         } b4;
 };
 
-class IntervalMetricsPage : public QWidget
+class FavouriteMetricsPage : public QWidget
 {
     Q_OBJECT
     G_OBJECT
@@ -410,7 +370,7 @@ class IntervalMetricsPage : public QWidget
 
     public:
 
-        IntervalMetricsPage(QWidget *parent = NULL);
+        FavouriteMetricsPage(QWidget *parent = NULL);
 
     public slots:
 
@@ -439,43 +399,6 @@ class IntervalMetricsPage : public QWidget
         QPushButton *rightButton;
 #endif
 };
-
-class SummaryMetricsPage : public QWidget
-{
-    Q_OBJECT
-
-    public:
-
-        SummaryMetricsPage(QWidget *parent = NULL);
-
-    public slots:
-
-        void upClicked();
-        void downClicked();
-        void leftClicked();
-        void rightClicked();
-        void availChanged();
-        void selectedChanged();
-        qint32 saveClicked();
-
-    protected:
-
-        bool changed;
-        QListWidget *availList;
-        QListWidget *selectedList;
-#ifndef Q_OS_MAC
-        QToolButton *upButton;
-        QToolButton *downButton;
-        QToolButton *leftButton;
-        QToolButton *rightButton;
-#else
-        QPushButton *upButton;
-        QPushButton *downButton;
-        QPushButton *leftButton;
-        QPushButton *rightButton;
-#endif
-};
-
 
 class KeywordsPage : public QWidget
 {
@@ -529,6 +452,7 @@ class ColorsPage : public QWidget
         void tabChanged();
 
         void scaleFont();
+        void searchFilter(QString);
 
     private:
 
@@ -549,6 +473,7 @@ class ColorsPage : public QWidget
         QTabWidget *colorTab;
 
         // Colors
+        QLineEdit *searchEdit;
         QTreeWidget *colors;
         QTreeWidget *themes;
         const Colors *colorSet;

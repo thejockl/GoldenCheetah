@@ -89,6 +89,8 @@
 #include "NewSideBar.h"
 #include "HelpWindow.h"
 #include "Perspective.h"
+#include "PerspectiveDialog.h"
+
 #if !defined(Q_OS_MAC)
 #include "QTFullScreen.h" // not mac!
 #endif
@@ -653,8 +655,11 @@ MainWindow::MainWindow(const QDir &home)
 
     viewMenu->addSeparator();
     viewMenu->addAction(tr("Activities"), this, SLOT(selectAnalysis()));
-    viewMenu->addAction(tr("Trends"), this, SLOT(selectHome()));
+    viewMenu->addAction(tr("Trends"), this, SLOT(selectTrends()));
     viewMenu->addAction(tr("Train"), this, SLOT(selectTrain()));
+    viewMenu->addSeparator();
+    viewMenu->addAction(tr("Import Perspective..."), this, SLOT(importPerspective()));
+    viewMenu->addAction(tr("Export Perspective..."), this, SLOT(exportPerspective()));
     viewMenu->addSeparator();
     subChartMenu = viewMenu->addMenu(tr("Add Chart"));
     viewMenu->addAction(tr("Import Chart..."), this, SLOT(importChart()));
@@ -869,12 +874,11 @@ MainWindow::setChartMenu()
     // setup to only show charts that are relevant
     // to this view
     switch(currentTab->currentView()) {
-        case 0 : mask = VIEW_HOME; break;
+        case 0 : mask = VIEW_TRENDS; break;
         default:
         case 1 : mask = VIEW_ANALYSIS; break;
         case 2 : mask = VIEW_DIARY; break;
         case 3 : mask = VIEW_TRAIN; break;
-        case 4 : mask = VIEW_INTERVAL; break;
     }
 
     chartMenu->clear();
@@ -900,12 +904,11 @@ MainWindow::setChartMenu(QMenu *menu)
     // setup to only show charts that are relevant
     // to this view
     switch(currentTab->currentView()) {
-        case 0 : mask = VIEW_HOME; break;
+        case 0 : mask = VIEW_TRENDS; break;
         default:
         case 1 : mask = VIEW_ANALYSIS; break;
         case 2 : mask = VIEW_DIARY; break;
         case 3 : mask = VIEW_TRAIN; break;
-        case 4 : mask = VIEW_INTERVAL; break;
     }
 
     menu->clear();
@@ -943,6 +946,69 @@ MainWindow::importChart()
     } else {
         importCharts(QStringList()<<fileName);
     }
+}
+
+void
+MainWindow::exportPerspective()
+{
+    int view = currentTab->currentView();
+    TabView *current = NULL;
+
+    QString typedesc;
+
+    switch (view) {
+    case 0:  current = currentTab->homeView; typedesc = "Trends"; break;
+    case 1:  current = currentTab->analysisView; typedesc = "Analysis"; break;
+    case 2:  current = currentTab->diaryView; typedesc = "Diary"; break;
+    case 3:  current = currentTab->trainView; typedesc = "Train"; break;
+    }
+
+    // export the current perspective to a file
+    QString suffix;
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export Persepctive"),
+                       QDir::homePath()+"/"+ typedesc + " " + current->perspective_->title() + ".gchartset",
+                       ("*.gchartset;;"), &suffix, QFileDialog::DontUseNativeDialog); // native dialog hangs when threads in use (!)
+
+    if (fileName.isEmpty()) {
+        QMessageBox::critical(this, tr("Export Perspective"), tr("No perspective file selected!"));
+    } else {
+        current->exportPerspective(current->perspective_, fileName);
+    }
+}
+
+void
+MainWindow::importPerspective()
+{
+    int view = currentTab->currentView();
+    TabView *current = NULL;
+
+    switch (view) {
+    case 0:  current = currentTab->homeView; break;
+    case 1:  current = currentTab->analysisView; break;
+    case 2:  current = currentTab->diaryView; break;
+    case 3:  current = currentTab->trainView; break;
+    }
+
+    // import a new perspective from a file
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Perspective file to export"), "", tr("GoldenCheetah Perspective Files (*.gchartset)"));
+    if (fileName.isEmpty()) {
+        QMessageBox::critical(this, tr("Import Perspective"), tr("No perspective file selected!"));
+    } else {
+
+        // import and select it
+        pactive = true;
+        if (current->importPerspective(fileName)) {
+
+            // on success we select the new one
+            current->setPerspectives(perspectiveSelector);
+
+            // and select remember pactive is true, so we do the heavy lifting here
+            perspectiveSelector->setCurrentIndex(current->perspectives_.count()-1);
+            current->perspectiveSelected(perspectiveSelector->currentIndex());
+        }
+        pactive = false;
+    }
+
 }
 
 #ifdef GC_HAS_CLOUD_DB
@@ -1251,7 +1317,7 @@ MainWindow::sidebarSelected(int id)
     case 0: selectAthlete(); break;
     case 1: // plan not written yet
             break;
-    case 2: selectHome(); break;
+    case 2: selectTrends(); break;
     case 3: selectAnalysis(); break;
     case 4: // reflect not written yet
             break;
@@ -1301,7 +1367,7 @@ MainWindow::selectDiary()
 }
 
 void
-MainWindow::selectHome()
+MainWindow::selectTrends()
 {
     currentTab->homeView->setPerspectives(perspectiveSelector);
     viewStack->setCurrentIndex(1);
@@ -1364,6 +1430,13 @@ MainWindow::setToolButtons()
 }
 
 void
+MainWindow::switchPerspective(int index)
+{
+    if (index >=0 && index < perspectiveSelector->count())
+        perspectiveSelector->setCurrentIndex(index);
+}
+
+void
 MainWindow::perspectiveSelected(int index)
 {
     if (pactive) return;
@@ -1379,9 +1452,9 @@ MainWindow::perspectiveSelected(int index)
     }
 
     // which perspective is currently being shown?
-    int prior = current->pages_.indexOf(current->page_);
+    int prior = current->perspectives_.indexOf(current->perspective_);
 
-    if (index < current->pages_.count()) {
+    if (index < current->perspectives_.count()) {
 
         // a perspectives was selected
         switch (view) {
@@ -1400,30 +1473,79 @@ MainWindow::perspectiveSelected(int index)
         perspectiveSelector->setCurrentIndex(prior);
 
         // now open dialog etc
-        switch (index - current->pages_.count()) {
+        switch (index - current->perspectives_.count()) {
         case 1 : // add perspectives
             {
                 QString name;
-                AddPerspectiveDialog *dialog= new AddPerspectiveDialog(currentTab->context, name);
+                QString expression;
+                AddPerspectiveDialog *dialog= new AddPerspectiveDialog(this, currentTab->context, name, expression, current->type);
                 int ret= dialog->exec();
                 delete dialog;
                 if (ret == QDialog::Accepted && name != "") {
 
                     // add...
-                    current->addPerspective(name);
+                    Perspective *newone = current->addPerspective(name);
+                    newone->setExpression(expression);
                     current->setPerspectives(perspectiveSelector);
 
                     // and select remember pactive is true, so we do the heavy lifting here
-                    perspectiveSelector->setCurrentIndex(current->pages_.count()-1);
+                    perspectiveSelector->setCurrentIndex(current->perspectives_.count()-1);
                     current->perspectiveSelected(perspectiveSelector->currentIndex());
                 }
             }
             break;
         case 2 : // manage perspectives
-            // XXX todo
+            PerspectiveDialog *dialog = new PerspectiveDialog(this, current);
+            connect(dialog, SIGNAL(perspectivesChanged()), this, SLOT(perspectivesChanged())); // update the selector and view
+            dialog->exec();
             break;
         }
         pactive = false;
+    }
+}
+
+// manage perspectives has done something (remove/add/reorder perspectives)
+// pactive MUST be true, see above
+void
+MainWindow::perspectivesChanged()
+{
+    int view = currentTab->currentView();
+    TabView *current = NULL;
+
+    switch (view) {
+    case 0:  current = currentTab->homeView; break;
+    case 1:  current = currentTab->analysisView; break;
+    case 2:  current = currentTab->diaryView; break;
+    case 3:  current = currentTab->trainView; break;
+    }
+
+    // which perspective is currently being selected (before we go setting the combobox)
+    Perspective *prior = current->perspective_;
+
+    // ok, so reset the combobox
+    current->setPerspectives(perspectiveSelector);
+
+    // is the old selected perspective still available?
+    int index = current->perspectives_.indexOf(prior);
+
+    // pretend a selection was made if the index needs to change
+    if (index >= 0 ) {
+        // still exists, but not currently selected for some reason
+        if (perspectiveSelector->currentIndex() != index)
+            perspectiveSelector->setCurrentIndex(index);
+
+        // no need to signal as its currently being shown
+    } else {
+
+        pactive = false; // dialog is active, but we need to force a change
+
+        // need to choose first as current got deleted
+        if (perspectiveSelector->currentIndex() != 0)
+            perspectiveSelector->setCurrentIndex(0);
+        else
+            emit perspectiveSelector->currentIndexChanged(0);
+
+        pactive = true;
     }
 }
 
@@ -1502,7 +1624,7 @@ MainWindow::dropEvent(QDropEvent *event)
         QMessageBox::information(this, tr("Chart Import"), QString(tr("Imported %1 metric charts")).arg(imported.count()));
 
         // switch to trend view if we aren't on it
-        selectHome();
+        selectTrends();
 
         // now select what was added
         currentTab->context->notifyPresetSelected(currentTab->context->athlete->presets.count()-1);
