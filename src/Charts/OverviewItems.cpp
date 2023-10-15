@@ -818,7 +818,7 @@ DonutOverviewItem::~DonutOverviewItem()
     delete chart;
 }
 
-MetricOverviewItem::MetricOverviewItem(ChartSpace *parent, QString name, QString symbol) : ChartSpaceItem(parent, name)
+MetricOverviewItem::MetricOverviewItem(ChartSpace *parent, QString name, QString symbol) : ChartSpaceItem(parent, name), showrange(false)
 {
     // metric
     this->type = OverviewItemType::METRIC;
@@ -846,7 +846,7 @@ MetricOverviewItem::~MetricOverviewItem()
     delete sparkline;
 }
 
-TopNOverviewItem::TopNOverviewItem(ChartSpace *parent, QString name, QString symbol) : ChartSpaceItem(parent, name), click(false), clickthru(NULL)
+TopNOverviewItem::TopNOverviewItem(ChartSpace *parent, QString name, QString symbol) : ChartSpaceItem(parent, name), transition(0), click(false), clickthru(NULL)
 {
     // metric
     this->type = OverviewItemType::TOPN;
@@ -930,7 +930,7 @@ MetaOverviewItem::~MetaOverviewItem()
     if (sparkline) delete sparkline;
 }
 
-IntervalOverviewItem::IntervalOverviewItem(ChartSpace *parent, QString name, QString xsymbol, QString ysymbol, QString zsymbol) : ChartSpaceItem(parent, name)
+IntervalOverviewItem::IntervalOverviewItem(ChartSpace *parent, QString name, QString xsymbol, QString ysymbol, QString zsymbol) : ChartSpaceItem(parent, name), hover(nullptr)
 {
     if (parent->scope == OverviewScope::ANALYSIS) this->type = OverviewItemType::INTERVAL;
     if (parent->scope == OverviewScope::TRENDS) this->type = OverviewItemType::ACTIVITIES;

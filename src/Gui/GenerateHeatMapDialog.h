@@ -33,9 +33,10 @@
 #include <QList>
 #include <QFileDialog>
 #include <QCheckBox>
+#include <QFrame>
 #include <QLabel>
-#include <QListIterator>
-#include <QDebug>
+#include <QComboBox>
+#include <QLineEdit>
 
 // Dialog class to show filenames, import progress and to capture user input
 // of ride date and time
@@ -47,7 +48,7 @@ class GenerateHeatMapDialog : public QDialog
 
 
 public:
-    GenerateHeatMapDialog(Context *context);
+    GenerateHeatMapDialog(Context *context, const QString &filter = "");
 
     QTreeWidget *files; // choose files to export
 
@@ -59,11 +60,14 @@ private slots:
     void selectClicked();
     void generateNow();
     void allClicked();
+    void mapProviderSelected(int index);
 
 private:
     Context *context;
     bool aborted;
 
+    QFrame *configFrame;
+    QFrame *fileFrame;
     QCheckBox *all;
 
     QComboBox *format;
@@ -71,6 +75,12 @@ private:
 
     QPushButton *selectDir;
     QLabel *dirLabel, *dirName;
+
+    QComboBox *mapProvider;
+    QLabel *osmURLLabel;
+    QLineEdit *osmURLInput;
+    QLabel *googleAPIKeyLabel;
+    QLineEdit *googleAPIKeyInput;
 
     QCheckBox *overwrite;
     QPushButton *cancel, *ok;

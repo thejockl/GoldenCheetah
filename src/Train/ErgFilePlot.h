@@ -50,7 +50,7 @@
 class ErgFileData : public QwtPointArrayData
 {
     public:
-    ErgFileData (Context *context) : QwtPointArrayData(QVector<double>(), QVector<double>()), context(context) {}
+    ErgFileData (Context *context) : QwtPointArrayData(QVector<double>(), QVector<double>()), context(context), bydist(false) {}
     double x(size_t i) const ;
     double y(size_t i) const ;
     size_t size() const ;
@@ -68,7 +68,7 @@ class ErgFileData : public QwtPointArrayData
 class NowData : public QwtPointArrayData
 {
     public:
-    NowData (Context *context) : QwtPointArrayData(QVector<double>(), QVector<double>()), context(context) {}
+    NowData (Context *context) : QwtPointArrayData(QVector<double>(), QVector<double>()), context(context), bydist(false) {}
     double x(size_t i) const ;
     double y(size_t i) const ;
     size_t size() const ;

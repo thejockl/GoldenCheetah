@@ -225,6 +225,7 @@ public:
     {
         stream << "[COURSE HEADER]" << endl;
         stream << "VERSION = 2" << endl;
+        stream << "SOURCE = goldencheetah" << endl;
         stream << "UNITS = METRIC" << endl;
         stream << "DESCRIPTION = " << description << endl;
         stream << "FILE NAME = " << fileName << endl;

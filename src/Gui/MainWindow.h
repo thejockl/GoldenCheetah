@@ -36,6 +36,8 @@
 #include "CloudDBTelemetry.h"
 #endif
 
+#include "SplashScreen.h"
+
 #ifdef Q_OS_MAC
 // What versions are supported by this SDK?
 #include <AvailabilityMacros.h>
@@ -89,10 +91,6 @@ class MainWindow : public QMainWindow
         void byebye() { close(); } // go bye bye for a restart
         bool init; // if constructor has completed set to true
 
-        // when loading athlete
-        QLabel *progress;
-        int loading;
-
         // currently selected tab
         AthleteTab *athleteTab() { return currentAthleteTab; }
         NewSideBar *newSidebar() { return sidebar; }
@@ -102,6 +100,8 @@ class MainWindow : public QMainWindow
 
         // switch perspective
         void switchPerspective(int index);
+
+        bool isStarting() const;
 
     protected:
 
@@ -120,8 +120,8 @@ class MainWindow : public QMainWindow
         virtual void dropEvent(QDropEvent *);
 
         // working with splash screens
-        QWidget *splash;
-        void setSplash(bool first=false);
+        SplashScreen *splash;
+        void setSplash();
         void clearSplash();
 
     signals:
@@ -132,7 +132,6 @@ class MainWindow : public QMainWindow
         void deletedAthlete(QString);
 
     public slots:
-
         bool eventFilter(QObject*,QEvent*);
 
         // GUI
@@ -143,6 +142,9 @@ class MainWindow : public QMainWindow
         void logBug();
         void support();
         void actionClicked(int);
+
+        void loadProgress(QString folder, double progress);
+
 
         // perspective selected
         void perspectiveSelected(int index);
@@ -294,6 +296,7 @@ class MainWindow : public QMainWindow
 
     private:
 
+        // when loading athlete
         NewSideBar *sidebar;
         AthleteView *athleteView;
 

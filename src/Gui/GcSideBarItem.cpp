@@ -17,6 +17,9 @@
  */
 
 #include "GcSideBarItem.h"
+
+#include <QStyleFactory>
+
 #include "DiaryWindow.h"
 #include "DiarySidebar.h"
 
@@ -317,6 +320,11 @@ GcSplitterHandle::init(QString title, Qt::Orientation orientation,
 
     if (right) titleLayout->addWidget(right);
     setCursor(Qt::ArrowCursor);
+
+#ifdef Q_OS_LINUX // Workaround for a bug in Breeze-QStyle that prevents buttons embedded on
+                  // GCSplitterHandle from receiving signals: https://bugs.kde.org/show_bug.cgi?id=473735
+    setStyle(QStyleFactory::create("fusion"));
+#endif
 }
 
 QSize

@@ -140,7 +140,7 @@ MainWindow::MainWindow(const QDir &home)
 
     // create a splash to keep user informed on first load
     // first one in middle of display, not middle of window
-    setSplash(true);
+    setSplash();
 
 #if defined(_MSC_VER) && defined(_WIN64)
     // set dbg/stacktrace directory for Windows to the athlete directory
@@ -156,9 +156,6 @@ MainWindow::MainWindow(const QDir &home)
     Context *context = new Context(this);
     context->athlete = new Athlete(context, home);
     currentAthleteTab = new AthleteTab(context);
-
-    // get rid of splash when currentTab is shown
-    clearSplash();
 
     setWindowIcon(QIcon(":images/gc.png"));
     setWindowTitle(context->athlete->home->root().dirName());
@@ -184,10 +181,11 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      *  GUI setup
      *--------------------------------------------------------------------*/
-     if (appsettings->contains(GC_SETTINGS_MAIN_GEOM)) {
+    splash->showMessage(tr("Setting up GUI..."));
+    if (appsettings->contains(GC_SETTINGS_MAIN_GEOM)) {
          restoreGeometry(appsettings->value(this, GC_SETTINGS_MAIN_GEOM).toByteArray());
          restoreState(appsettings->value(this, GC_SETTINGS_MAIN_STATE).toByteArray());
-     } else {
+    } else {
 
          AppearanceSettings defaults = GSettings::defaultAppearanceSettings();
 
@@ -203,6 +201,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      * ScopeBar as sidebar from v3.6
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Setting up GUI: Scopebar..."));
 
     sidebar = new NewSideBar(context, this);
     HelpWhatsThis *helpNewSideBar = new HelpWhatsThis(sidebar);
@@ -240,6 +239,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      * What's this Context Help
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Setting up GUI: Context Help..."));
 
     // Help for the whole window
     HelpWhatsThis *help = new HelpWhatsThis(this);
@@ -252,6 +252,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      *  Toolbar
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Setting up GUI: Toolbar..."));
     head = new GcToolBar(this);
 
     QStyle *toolStyle = QStyleFactory::create("fusion");
@@ -396,6 +397,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      * Central Widget
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Setting up GUI: Central Widget..."));
 
     tabbar = new DragBar(this);
     tabbar->setTabsClosable(false); // use athlete view
@@ -450,6 +452,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      * Application Menus
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Setting up GUI: Application Menus..."));
 #ifdef WIN32
     QString menuColorString = GColor(CTOOLBAR).name();
     menuBar()->setStyleSheet(QString("QMenuBar { color: black; background: %1; }"
@@ -624,25 +627,25 @@ MainWindow::MainWindow(const QDir &home)
 #else
     viewMenu->addAction(tr("Toggle Full Screen"), this, SLOT(toggleFullScreen()));
 #endif
-    showhideViewbar = viewMenu->addAction(tr("Show View Sidebar"), this, SLOT(showViewbar(bool)));
+    showhideViewbar = viewMenu->addAction(tr("Show View Sidebar"), this, SLOT(showViewbar(bool)), QKeySequence("F2"));
     showhideViewbar->setCheckable(true);
     showhideViewbar->setChecked(true);
-    showhideSidebar = viewMenu->addAction(tr("Show Left Sidebar"), this, SLOT(showSidebar(bool)));
+    showhideSidebar = viewMenu->addAction(tr("Show Left Sidebar"), this, SLOT(showSidebar(bool)), QKeySequence("F3"));
     showhideSidebar->setCheckable(true);
     showhideSidebar->setChecked(true);
-    showhideLowbar = viewMenu->addAction(tr("Show Compare Pane"), this, SLOT(showLowbar(bool)));
+    showhideLowbar = viewMenu->addAction(tr("Show Compare Pane"), this, SLOT(showLowbar(bool)), QKeySequence("F4"));
     showhideLowbar->setCheckable(true);
     showhideLowbar->setChecked(false);
-    showhideToolbar = viewMenu->addAction(tr("Show Toolbar"), this, SLOT(showToolbar(bool)));
+    showhideToolbar = viewMenu->addAction(tr("Show Toolbar"), this, SLOT(showToolbar(bool)), QKeySequence("F5"));
     showhideToolbar->setCheckable(true);
     showhideToolbar->setChecked(true);
-    showhideTabbar = viewMenu->addAction(tr("Show Athlete Tabs"), this, SLOT(showTabbar(bool)));
+    showhideTabbar = viewMenu->addAction(tr("Show Athlete Tabs"), this, SLOT(showTabbar(bool)), QKeySequence("F6"));
     showhideTabbar->setCheckable(true);
     showhideTabbar->setChecked(true);
 
     viewMenu->addSeparator();
-    viewMenu->addAction(tr("Activities"), this, SLOT(selectAnalysis()));
     viewMenu->addAction(tr("Trends"), this, SLOT(selectTrends()));
+    viewMenu->addAction(tr("Activities"), this, SLOT(selectAnalysis()));
     viewMenu->addAction(tr("Train"), this, SLOT(selectTrain()));
     viewMenu->addSeparator();
     viewMenu->addAction(tr("Import Perspective..."), this, SLOT(importPerspective()));
@@ -684,6 +687,7 @@ MainWindow::MainWindow(const QDir &home)
     /*----------------------------------------------------------------------
      * Lets go, choose latest ride and get GUI up and running
      *--------------------------------------------------------------------*/
+    splash->showMessage(tr("Selecting ride..."));
 
     showTabbar(appsettings->value(NULL, GC_TABBAR, "0").toBool());
 
@@ -710,12 +714,14 @@ MainWindow::MainWindow(const QDir &home)
      *--------------------------------------------------------------------*/
 
 #if !defined(OPENDATA_DISABLE)
+    splash->showMessage(tr("Checking for udates..."));
     OpenData::check(currentAthleteTab->context);
 #else
     fprintf(stderr, "OpenData disabled, secret not defined.\n"); fflush(stderr);
 #endif
 
 #ifdef GC_HAS_CLOUD_DB
+    splash->showMessage(tr("Asking for telemetry..."));
     telemetryClient = new CloudDBTelemetryClient();
     if (appsettings->value(NULL, GC_ALLOW_TELEMETRY, "undefined").toString() == "undefined" ) {
         // ask user if storing is allowed
@@ -737,6 +743,8 @@ MainWindow::MainWindow(const QDir &home)
 
 #endif
 
+    // get rid of splash when currentTab is shown
+    clearSplash();
 }
 
 
@@ -745,47 +753,17 @@ MainWindow::MainWindow(const QDir &home)
  *--------------------------------------------------------------------*/
 
 void
-MainWindow::setSplash(bool first)
+MainWindow::setSplash()
 {
-    // new frameless widget
-    splash = new QWidget(NULL);
-
-    // modal dialog with no parent so we set it up as a 'splash'
-    // because QSplashScreen doesn't seem to work (!!)
-    splash->setAttribute(Qt::WA_DeleteOnClose);
-    splash->setWindowFlags(splash->windowFlags() | Qt::FramelessWindowHint);
-#ifdef Q_OS_LINUX
-    splash->setWindowFlags(splash->windowFlags() | Qt::X11BypassWindowManagerHint);
-#endif
-
-    // put widgets on it
-    progress = new QLabel(splash);
-    progress->setAlignment(Qt::AlignCenter);
-    QHBoxLayout *l = new QHBoxLayout(splash);
-    l->setSpacing(0);
-    l->addWidget(progress);
-
-    // lets go
-    splash->setFixedSize(100 *dpiXFactor, 80 *dpiYFactor);
-
-    if (first) {
-        // middle of screen
-        splash->move(desktop->availableGeometry().center()-QPoint(50, 25));
-    } else {
-        // middle of mainwindow is appropriate
-        splash->move(geometry().center()-QPoint(50, 25));
-    }
-    splash->show();
-
-    // reset the splash counter
-    loading=1;
+    QString versionText = QString(tr("%1 - build %2")).arg(VERSION_STRING).arg(VERSION_LATEST);
+    splash = new SplashScreen(":images/splashscreen.png", versionText, 533, 100);
 }
 
 void
 MainWindow::clearSplash()
 {
-    progress = NULL;
-    splash->close();
+    delete splash;
+    splash = nullptr;
 }
 
 void
@@ -1371,6 +1349,15 @@ MainWindow::selectTrends()
     setToolButtons();
 }
 
+
+bool
+MainWindow::isStarting
+() const
+{
+    return splash != nullptr;
+}
+
+
 void
 MainWindow::setToolButtons()
 {
@@ -1657,7 +1644,7 @@ MainWindow::dropEvent(QDropEvent *event)
     if (list.count())  importCharts(list);
 
     // import workouts
-    if (workouts.count()) Library::importFiles(currentAthleteTab->context, workouts, true);
+    if (workouts.count()) Library::importFiles(currentAthleteTab->context, workouts, LibraryBatchImportConfirmation::forcedDialog);
 
     // if there is anything left, process based upon view...
     if (filenames.count()) {
@@ -1713,7 +1700,7 @@ MainWindow::batchProcessing()
 void
 MainWindow::generateHeatMap()
 {
-    GenerateHeatMapDialog *d = new GenerateHeatMapDialog(currentAthleteTab->context);
+    GenerateHeatMapDialog *d = new GenerateHeatMapDialog(currentAthleteTab->context, searchBox->filter());
     d->exec();
 }
 
@@ -2602,6 +2589,17 @@ MainWindow::actionClicked(int index)
 
     }
 }
+
+
+void
+MainWindow::loadProgress
+(QString /*folder*/, double progress)
+{
+    if (splash) {
+        splash->showMessage(QString(tr("Loading activities: %1\%")).arg(static_cast<int>(progress)));
+    }
+}
+
 
 void
 MainWindow::addIntervals()
