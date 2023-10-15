@@ -34,6 +34,8 @@
 #include <qwt_plot_grid.h>
 #include <qwt_plot_layout.h>
 #include <qwt_plot_marker.h>
+#include <qwt_plot_picker.h>
+#include <qwt_picker_machine.h>
 #include <qwt_symbol.h>
 #include <qwt_scale_engine.h>
 #include <qwt_scale_widget.h>
@@ -64,8 +66,8 @@ CPPlot::CPPlot(CriticalPowerWindow *parent, Context *context, bool rangemode) : 
     model(0), modelVariant(0), fit(0), fitdata(0), modelDecay(false),
 
     // state
-    context(context), bestsCache(NULL), dateCV(0.0), sport(""),
-    rideSeries(RideFile::watts),
+    context(context), bestsCache(NULL), veloCP(0), dateCP(0), dateCV(0.0), sport(""),
+    rideSeries(RideFile::watts), criticalSeries(CriticalPowerWindow::CriticalSeriesType::watts),
     isFiltered(false), shadeMode(2),
     shadeIntervals(true), rangemode(rangemode), 
     showTest(true), showBest(true), filterBest(false), showPowerIndex(false), showPercent(false), showHeat(false),
@@ -114,6 +116,11 @@ CPPlot::CPPlot(CriticalPowerWindow *parent, Context *context, bool rangemode) : 
     canvasPicker = new LTMCanvasPicker(this);
     static_cast<QwtPlotCanvas*>(canvas())->setFrameStyle(QFrame::NoFrame);
     connect(canvasPicker, SIGNAL(pointHover(QwtPlotCurve*, int)), this, SLOT(pointHover(QwtPlotCurve*, int)));
+
+    // crosshair
+    QwtPicker *picker = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft, QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOff, canvas());
+    picker->setStateMachine(new QwtPickerTrackerMachine());
+    picker->setRubberBandPen(QPen(GColor(CPLOTMARKER)));
 
     // now color everything we created
     configChanged(CONFIG_APPEARANCE);

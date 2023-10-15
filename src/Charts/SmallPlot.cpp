@@ -27,14 +27,86 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_marker.h>
+#include <qwt_plot_picker.h>
+#include <qwt_picker_machine.h>
 #include <qwt_text.h>
 #include <qwt_legend.h>
 #include <qwt_series_data.h>
 #include <qwt_compat.h>
 
 static double inline max(double a, double b) { if (a > b) return a; else return b; }
+static double inline min(double a, double b) { if (a < b) return a; else return b; }
 
-SmallPlot::SmallPlot(QWidget *parent) : QwtPlot(parent), d_mrk(NULL), smooth(30)
+
+SmallPlotPicker::SmallPlotPicker(QWidget *canvas) : QwtPlotPicker(canvas)
+{
+}
+
+
+QwtText
+SmallPlotPicker::trackerText(const QPoint &point) const
+{
+    QPointF pointF = invTransform(point);
+    if (pointF.x() < 0) {
+        return QwtText("");
+    }
+    int intNormX = pointF.x();
+    int hours = intNormX / 60;
+    int mins = intNormX % 60;
+    int secs = (pointF.x() - intNormX) * 60;
+    bool firstLine = true;
+
+    QString text;
+    QwtPlotItemList plotItems = plot()->itemList(QwtPlotItem::Rtti_PlotCurve);
+    foreach (QwtPlotItem *plotItem, plotItems) {
+        QwtPlotCurve *plotCurve = static_cast<QwtPlotCurve *>(plotItem);
+        int idx = 0;
+        size_t size = plotCurve->data()->size();
+        double dist = 100000;
+        for (size_t i = 0; i < size; ++i) {
+            QPointF nextPoint = plotCurve->data()->sample(i);
+            double newDist = fabs(nextPoint.x() - pointF.x());
+            if (newDist <= dist) {
+                idx = i;
+                dist = newDist;
+            } else {
+                QPointF thisPoint = plotCurve->data()->sample(idx);
+                if (thisPoint.y() > 0) {
+                    if (! firstLine) {
+                        text.append("\n");
+                    }
+                    text.append(QString("%1: %2").arg(plotCurve->title().text())
+                                                 .arg(int(thisPoint.y())));
+                    firstLine = false;
+                }
+                break;
+            }
+        }
+    }
+    if (! firstLine) {
+        text.append("\n");
+    }
+    text.append(QString("%1:%2:%3").arg(hours)
+                                   .arg(mins, 2, 10, QChar('0'))
+                                   .arg(secs, 2, 10, QChar('0')));
+
+    QwtText tooltip(text);
+    QFont stGiles;
+    stGiles.fromString(appsettings->value(this, GC_FONT_CHARTLABELS, QFont().toString()).toString());
+    stGiles.setPointSize(appsettings->value(NULL, GC_FONT_CHARTLABELS_SIZE, 8).toInt());
+    stGiles.setWeight(QFont::Bold);
+    tooltip.setFont(stGiles);
+
+    tooltip.setBackgroundBrush(QBrush(GColor(CPLOTMARKER)));
+    tooltip.setColor(GColor(CRIDEPLOTBACKGROUND));
+    tooltip.setBorderRadius(6);
+    tooltip.setRenderFlags(Qt::AlignCenter | Qt::AlignVCenter);
+
+    return tooltip;
+}
+
+
+SmallPlot::SmallPlot(QWidget *parent) : QwtPlot(parent), d_mrk(NULL), smooth(30), allowSelect(false)
 {
     setCanvasBackground(GColor(CPLOTBACKGROUND));
     static_cast<QwtPlotCanvas*>(canvas())->setFrameStyle(QFrame::NoFrame);
@@ -96,6 +168,18 @@ struct DataPoint {
     DataPoint(double t, double h, double w, double a, int i) :
              time(t), hr(h), alt(a), watts(w), inter(i) {}
 };
+
+void
+SmallPlot::enableAllowSelect()
+{
+    allowSelect = true;
+    QwtPlotPicker *picker = new SmallPlotPicker(canvas());
+    picker->setTrackerMode(QwtPlotPicker::ActiveOnly);
+    picker->setStateMachine(new QwtPickerTrackerMachine());
+    picker->setRubberBand(QwtPicker::VLineRubberBand);
+    picker->setRubberBandPen(QPen(GColor(CPLOTMARKER)));
+    connect(picker, SIGNAL(moved(const QPoint&)), this, SLOT(pointMoved(const QPoint&)));
+}
 
 void
 SmallPlot::recalc()
@@ -183,6 +267,7 @@ SmallPlot::setYMax()
 {
     double ymax = 0;
     double y1max = 500;
+    double y1min = 500;
     QString ylabel = "";
     QString y1label = "";
     if (wattsCurve->isVisible()) {
@@ -194,12 +279,23 @@ SmallPlot::setYMax()
         ylabel += QString((ylabel == "") ? "" : " / ") + tr("BPM");
     }
     if (altCurve->isVisible()) {
-         y1max = max(y1max, altCurve->maxYValue());
-         y1label = "m";
+        size_t size = altCurve->data()->size();
+        double curMinY = 10000;
+        double curMaxY = 0;
+        for (size_t i = 0; i < size; ++i) {
+            double nextY = altCurve->data()->sample(i).y();
+            if (nextY > 0.0) {
+                curMinY = min(curMinY, nextY);
+                curMaxY = max(curMaxY, nextY);
+            }
+        }
+        y1min = curMinY;
+        y1max = curMaxY;
+        y1label = "m";
     }
     setAxisScale(QwtAxisId(QwtAxis::yLeft,0), 0.0, ymax * 1.1);
     setAxisTitle(QwtAxisId(QwtAxis::yLeft,0), ylabel);
-    setAxisScale(QwtAxisId(QwtAxis::yLeft,1), 0.0, y1max * 1.1);
+    setAxisScale(QwtAxisId(QwtAxis::yLeft,1), y1min * 0.9, y1max * 1.1);
     setAxisTitle(QwtAxisId(QwtAxis::yLeft,1), y1label);
     setAxisVisible(QwtAxisId(QwtAxis::yLeft,0), false); // hide for a small plot
     setAxisVisible(QwtAxisId(QwtAxis::yLeft,1), false); // hide for a small plot
@@ -224,6 +320,13 @@ SmallPlot::setAxisTitle(QwtAxisId axis, QString label)
     title.setFont(stGiles);
     QwtPlot::setAxisFont(axis, stGiles);
     QwtPlot::setAxisTitle(axis, title);
+}
+
+
+bool
+SmallPlot::hasAllowSelect() const
+{
+    return allowSelect;
 }
 
 void
@@ -276,4 +379,19 @@ SmallPlot::setSmoothing(int value)
 {
     smooth = value;
     recalc();
+}
+
+void
+SmallPlot::pointMoved(const QPoint &pos)
+{
+    double dataPosX = invTransform(QwtAxis::xBottom, pos.x());
+    emit selectedPosX(dataPosX);
+}
+
+
+void
+SmallPlot::leaveEvent(QEvent *event)
+{
+    emit mouseLeft();
+    QWidget::leaveEvent(event);
 }

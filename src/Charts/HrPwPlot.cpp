@@ -42,6 +42,8 @@ max(double a, double b) { if (a > b) return a; else return b; }
 
 HrPwPlot::HrPwPlot(Context *context, HrPwWindow *hrPwWindow) :
     QwtPlot(hrPwWindow),
+    joinLine(false),
+    shadeZones(0),
     hrPwWindow(hrPwWindow),
     context(context),
     bg(NULL), delay(-1),
@@ -297,8 +299,8 @@ HrPwPlot::recalc()
 
     // Clean up memory
     for (int i = 0; i < 36; ++i) {
-        delete plotedWattsArray[i];
-        delete plotedHrArray[i];
+        delete[] plotedWattsArray[i];
+        delete[] plotedHrArray[i];
     }       
 
     setAxisScale(xBottom, 0.0, maxWatt);

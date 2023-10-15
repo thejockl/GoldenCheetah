@@ -70,7 +70,10 @@ ErgDBDownloadDialog::ErgDBDownloadDialog(Context *context) : QDialog(context->ma
         checkBox->setChecked(false);
         files->setItemWidget(add, 0, checkBox);
 
-        add->setText(1, item.name);
+        // HTML unescape the title
+        QString title = QTextDocumentFragment::fromHtml(item.name).toPlainText();
+
+        add->setText(1, title);
         add->setText(2, item.workoutType);
         add->setText(3, item.author);
         add->setText(4, item.added.toString(tr("dd MMM yyyy")));
@@ -190,7 +193,7 @@ ErgDBDownloadDialog::downloadFiles()
             int id = current->text(6).toInt();
             QString content = ergdb.getWorkout(id);
 
-            QString filename = workoutDir + "/" + current->text(1) + ".erg2";
+            QString filename = workoutDir + "/ergdb-" + QString::number(id) + ".erg2";
             ErgFile *p = ErgFile::fromContent2(content, context);
 
             // open success?
@@ -217,6 +220,12 @@ ErgDBDownloadDialog::downloadFiles()
 
                 QFile out(filename);
                 if (out.open(QIODevice::WriteOnly) == true) {
+                    if (p->source().isEmpty()) {
+                        p->source("ErgDB");
+                    }
+                    if (p->ergDBId().isEmpty()) {
+                        p->ergDBId(QString::number(id));
+                    }
 
                     QTextStream output(&out);
                     output << content;
@@ -224,7 +233,7 @@ ErgDBDownloadDialog::downloadFiles()
 
                     downloads++;
                     current->setText(5, tr("Saved")); QApplication::processEvents();
-                    trainDB->importWorkout(filename, p); // add to library
+                    trainDB->importWorkout(filename, *p); // add to library
 
                 } else {
 

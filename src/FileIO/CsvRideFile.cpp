@@ -29,6 +29,7 @@
 #include <QRegExp>
 #include <QTextStream>
 #include <QVector>
+#include <QMap>
 #include <algorithm> // for std::sort
 #include "cmath"
 
@@ -101,6 +102,8 @@ RideFile *CsvFileReader::openRideFile(QFile &file, QStringList &errors, QList<Ri
     typedef enum temperature Temperature;
     static Temperature tempType = degNone;
     QDateTime startTime, iBikeTime;
+    QMap<QString, QString> metadata;
+    bool isMetadataSection = true;
 
     // Minutes,Torq (N-m),Km/h,Watts,Km,Cadence,Hrate,ID
     // Minutes, Torq (N-m),Km/h,Watts,Km,Cadence,Hrate,ID
@@ -237,6 +240,25 @@ RideFile *CsvFileReader::openRideFile(QFile &file, QStringList &errors, QList<Ri
 
             if (line.length()==0) {
                 continue;
+            }
+
+            // Read Metadata from section above csv-payload
+            if (isMetadataSection) {
+                if (line.front() != '#') {
+                    isMetadataSection = false;
+                    lineno = 1; // fake removal of all comments above first "real" line
+                } else {
+                    line.remove(0, 1);
+                    int sepPos = line.indexOf(':');
+                    if (sepPos > 0) {
+                        QString key = line.left(sepPos).trimmed();
+                        QString value = line.right(line.length() - sepPos - 1).trimmed();
+                        if (key.length() > 0 && value.length() > 0) {
+                            metadata[key] = value;
+                        }
+                    }
+                    continue;
+                }
             }
 
             if (lineno == 1) {
@@ -1387,6 +1409,11 @@ RideFile *CsvFileReader::openRideFile(QFile &file, QStringList &errors, QList<Ri
         errors << "No samples present.";
         delete rideFile;
         return NULL;
+    }
+
+    // Transfer Metadata
+    if (metadata.contains("Route")) {
+        rideFile->setTag("Route", metadata["Route"]);
     }
 
     // Is there an associated .vo2 file?
