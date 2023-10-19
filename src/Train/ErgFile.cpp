@@ -1634,6 +1634,28 @@ void ErgFile::sortTexts() const
     });
 }
 
+
+void
+ErgFile::coalescePoints
+()
+{
+    CoalescedPoints.clear();
+    double lastVal = -1;
+    int repeated = 0;
+    for (int i = 0; i < Points.size(); ++i) {
+        if (i > 0 && std::abs(lastVal - Points[i].val) < std::numeric_limits<double>::epsilon()) {
+            ++repeated;
+            if (repeated >= 2) {
+                CoalescedPoints.removeLast();
+            }
+        } else {
+            repeated = 0;
+        }
+        CoalescedPoints << Points[i];
+        lastVal = Points[i].val;
+    }
+}
+
 void ErgFile::finalize()
 {
     if (Laps.count() == 0) {
@@ -1655,21 +1677,7 @@ void ErgFile::finalize()
         Laps.append(lap);
     }
 
-    CondensedPoints.clear();
-    int lastVal = -1;
-    int repeated = 0;
-    for (int i = 0; i < Points.size(); ++i) {
-        if (i > 0 && lastVal == Points[i].val) {
-            ++repeated;
-            if (repeated >= 2) {
-                CondensedPoints.removeLast();
-            }
-        } else {
-            repeated = 0;
-        }
-        CondensedPoints << Points[i];
-        lastVal = Points[i].val;
-    }
+    coalescePoints();
 
     sortLaps();
     sortTexts();
