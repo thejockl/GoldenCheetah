@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include "Units.h"
 #include "Utils.h"
+#include "Settings.h"
 
 #include "TTSReader.h"
 
@@ -1801,6 +1802,10 @@ ErgFile::calculateMetrics()
     if (!isValid()) return;
 
     if (format() == ErgFileFormat::crs) {
+        double hysteresis = appsettings->value(nullptr, GC_ELEVATION_HYSTERESIS).toDouble();
+        if (hysteresis <= 0.1) {
+            hysteresis = 3.0;
+        }
 
         ErgFilePoint last;
         bool first = true;
@@ -1810,16 +1815,19 @@ ErgFile::calculateMetrics()
                 minY(p.y);
                 maxY(p.y);
                 first = false;
+                last = p;
             } else {
                 minY(std::min(minY(), p.y));
                 maxY(std::max(maxY(), p.y));
 
-                if (p.y > last.y) {
+                if (p.y > last.y + hysteresis) {
                     eleDist(eleDist() + p.x - last.x);
                     ele(ele() + p.y - last.y);
+                    last = p;
+                } else if (p.y < last.y - hysteresis) {
+                    last = p;
                 }
             }
-            last = p;
         }
         if (ele() == 0 || eleDist() == 0) grade(0);
         else grade(ele() / eleDist() * 100);
