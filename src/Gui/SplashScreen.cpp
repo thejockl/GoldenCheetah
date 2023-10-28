@@ -6,6 +6,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QApplication>
+#include <QScreen>
 
 
 SplashScreen::SplashScreen
@@ -13,6 +14,21 @@ SplashScreen::SplashScreen
 : QSplashScreen()
 {
     QPixmap pixmap(pixmapPath);
+    QScreen *screen = QApplication::primaryScreen();
+    if (screen->geometry().width() <= 1280) {
+        // Scale pixmap for lower screen resolutions
+        int targetPixmapWidth = 420;
+        if (screen->geometry().width() < 1024) {
+            targetPixmapWidth = 320;
+        }
+        int origPixmapWidth = pixmap.rect().width();
+        int origPixmapHeight = pixmap.rect().height();
+        pixmap = pixmap.scaledToWidth(targetPixmapWidth, Qt::SmoothTransformation);
+        int newPixmapWidth = pixmap.rect().width();
+        int newPixmapHeight = pixmap.rect().height();
+        versionX *= newPixmapWidth / static_cast<double>(origPixmapWidth);
+        versionY *= newPixmapHeight / static_cast<double>(origPixmapHeight);
+    }
     QPainter painter(&pixmap);
     if (version.size() > 0) {
         QFont f = font();
