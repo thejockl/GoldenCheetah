@@ -134,6 +134,7 @@ class Context : public QObject
         RideItem *ride;  // the currently selected ride
         DateRange dr_;
         ErgFile *workout; // the currently selected workout file
+        QString codeWorkoutTitle; // the name of a "code"-workout (i.e. a workout without an ergfile)
         VideoSyncFile *videosync; // the currently selected videosync file
         QString videoFilename;
         long now; // point in time during train session
@@ -193,7 +194,8 @@ class Context : public QObject
 
         // realtime signals
         void notifyTelemetryUpdate(const RealtimeData &rtData) { telemetryUpdate(rtData); }
-        void notifyErgFileSelected(ErgFile *x) { workout=x; ergFileSelected(x); ergFileSelected((ErgFileBase*)(x));}
+        void notifyCodeWorkoutSelected(QString title);
+        void notifyErgFileSelected(ErgFile *x) { codeWorkoutTitle = ""; workout=x; ergFileSelected(x); ergFileSelected((ErgFileBase*)(x));}
         void notifyVideoSyncFileSelected(VideoSyncFile *x) { videosync=x; videoSyncFileSelected(x); }
         ErgFile *currentErgFile() { return workout; }
         VideoSyncFile *currentVideoSyncFile() { return videosync; }
@@ -315,6 +317,7 @@ class Context : public QObject
         void telemetryUpdate(RealtimeData rtData);
         void ergFileSelected(ErgFile *);
         void ergFileSelected(ErgFileBase *);
+        void codeWorkoutSelected(QString title);
         void videoSyncFileSelected(VideoSyncFile *);
         void mediaSelected(QString);
         void selectWorkout(QString); // ask traintool to select this

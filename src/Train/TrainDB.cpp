@@ -1118,14 +1118,19 @@ TrainDB::createDefaultEntriesWorkout
 
     ErgFileBase efb;
     efb.name(tr("Manual Erg Mode"));
-    efb.format(ErgFileFormat::code);
+    efb.format(ErgFileFormat::manualerg);
     efb.source("gcdefault");
-    rc &= importWorkout("//1", efb);
+    rc &= importWorkout("//1", efb, ImportMode::insertOrUpdate);
 
     efb.name(tr("Manual Slope Mode"));
-    efb.format(ErgFileFormat::code);
+    efb.format(ErgFileFormat::manualslope);
     efb.source("gcdefault");
-    rc &= importWorkout("//2", efb);
+    rc &= importWorkout("//2", efb, ImportMode::insertOrUpdate);
+
+    efb.name(tr("Automatic Pulse Mode"));
+    efb.format(ErgFileFormat::hr);
+    efb.source("gcdefault");
+    rc &= importWorkout("//3", efb, ImportMode::insertOrUpdate);
 
     return rc;
 }
@@ -1220,23 +1225,23 @@ TrainDB::createAllDataTables
     bool ok = true;
     int ret;
     ok &= (ret = createTable(TABLE_WORKOUT, FIELDS_WORKOUT)) != -1;
-    if (ret > 0) {
+    if (ret >= 0) {
         ok &= createDefaultEntriesWorkout();
     }
     ok &= (ret = createTable(TABLE_VIDEO, FIELDS_VIDEO)) != -1;
-    if (ret > 0) {
+    if (ret >= 0) {
         ok &= createDefaultEntriesVideo();
     }
     ok &= (ret = createTable(TABLE_VIDEOSYNC, FIELDS_VIDEOSYNC)) != -1;
-    if (ret > 0) {
+    if (ret >= 0) {
         ok &= createDefaultEntriesVideoSync();
     }
     ok &= (ret = createTable(TABLE_TAGSTORE, FIELDS_TAGSTORE)) != -1;
-    if (ret > 0) {
+    if (ret >= 0) {
         ok &= createDefaultEntriesTagStore();
     }
     ok &= (ret = createTable(TABLE_WORKOUT_TAG, FIELDS_WORKOUT_TAG)) != -1;
-    if (ret > 0) {
+    if (ret >= 0) {
         ok &= createDefaultEntriesWorkoutTags();
     }
     return ok;
@@ -1423,7 +1428,7 @@ TrainDB::bindWorkout
 (QSqlQuery &query, const QString &filepath, const ErgFileBase &ergFileBase) const
 {
     query.bindValue(":filepath", filepath);
-    query.bindValue(":type", ergFileBase.typeString());
+    query.bindValue(":type", ergFileBase.filterTypeString());
     bindIfValue(query, ":source", ergFileBase.source());
     bindIfValue(query, ":source_id", ergFileBase.ergDBId());
     if (! bindIfValue(query, ":displayname", ergFileBase.name().trimmed())) {

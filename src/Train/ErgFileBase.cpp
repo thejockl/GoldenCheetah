@@ -95,13 +95,14 @@ ErgFileBase::type
 {
     switch (_format) {
     case ErgFileFormat::crs:
+    case ErgFileFormat::manualslope:
         return ErgFileType::slp;
     case ErgFileFormat::erg:
     case ErgFileFormat::erg2:
     case ErgFileFormat::mrc:
+    case ErgFileFormat::manualerg:
+    case ErgFileFormat::hr:
         return ErgFileType::erg;
-    case ErgFileFormat::code:
-        return ErgFileType::code;
     default:
         return ErgFileType::unknown;
     }
@@ -116,12 +117,26 @@ ErgFileBase::typeString
         return "slp";
     case ErgFileType::erg:
         return "erg";
-    case ErgFileType::code:
-        return "code";
     default:
         return "unknown";
     }
 }
+
+
+QString
+ErgFileBase::filterTypeString
+() const
+{
+    switch (_format) {
+    case ErgFileFormat::manualslope:
+    case ErgFileFormat::manualerg:
+    case ErgFileFormat::hr:
+        return "code";
+    default:
+        return typeString();
+    }
+}
+
 
 QString
 ErgFileBase::ergSubTypeString
@@ -164,8 +179,8 @@ ErgFileBase::formatString
         return "CRS";
     case ErgFileFormat::erg2:
         return "ERG";
-    case ErgFileFormat::code:
-        return "CODE";
+    case ErgFileFormat::hr:
+        return "HR";
     case ErgFileFormat::unknown:
         return "UNKNOWN";
     default:

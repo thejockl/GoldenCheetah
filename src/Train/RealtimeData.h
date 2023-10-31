@@ -48,7 +48,7 @@ public:
                       LeftPedalSmoothness, RightPedalSmoothness, Slope, 
                       LapDistance, LapDistanceRemaining, ErgTimeRemaining,
                       Latitude, Longitude, Altitude, RouteDistance,
-                      DistanceRemaining };
+                      DistanceRemaining, TargetHr };
 
     typedef enum dataseries DataSeries;
 
@@ -94,6 +94,7 @@ public:
     void setLatitude(double);
     void setLongitude(double);
     void setAltitude(double);
+    void setTargetHr(double);
 
     const char *getName() const;
 
@@ -148,6 +149,7 @@ public:
     double getLatitude() const;
     double getLongitude() const;
     double getAltitude() const;
+    double getTargetHr() const;
 
     void setTrainerStatusAvailable(bool status);
     bool getTrainerStatusAvailable() const;
@@ -200,6 +202,8 @@ private:
     bool trainerCalibRequired;
     bool trainerConfigRequired;
     bool trainerBrakeFault;
+
+    double targetHr;
 };
 
 #endif

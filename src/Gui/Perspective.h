@@ -76,7 +76,7 @@ class Perspective : public GcWindow
         void setExpression(QString);
 
         // trainswitch
-        enum switchenum { None=0, Erg=1, Slope=2, Video=3, Map=4 };
+        enum switchenum { None=0, Erg=1, Slope=2, Video=3, Map=4, Hr=5 };
         int trainSwitch() const { return trainswitch; }
         void setTrainSwitch(int x) { trainswitch = (switchenum)x; }
 

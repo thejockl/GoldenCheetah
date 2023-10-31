@@ -32,6 +32,7 @@
 #include "RemoteControl.h"
 #include "AthleteTab.h"
 #include "PhysicsUtility.h"
+#include "TrainHrController.h"
 #include "MultiFilterProxyModel.h"
 #include "InfoWidget.h"
 
@@ -219,6 +220,9 @@ class TrainSidebar : public GcWindow
 
         // VO2 measurement data to save
         void vo2Data(double rf, double rmv, double vo2, double vco2, double tv, double feo2);
+
+    private:
+        TrainHrController trainHrController;
 
     protected:
 

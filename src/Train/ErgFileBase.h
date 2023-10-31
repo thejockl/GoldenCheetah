@@ -32,14 +32,15 @@ enum class ErgFileFormat {
     mrc,
     crs,
     erg2,
-    code
+    manualerg,
+    manualslope,
+    hr
 };
 
 enum class ErgFileType {
     unknown = 0,
     erg,
-    slp,
-    code
+    slp
 };
 
 enum class ErgFilePowerZone {
@@ -73,6 +74,7 @@ class ErgFileBase
 
         ErgFileType type() const;
         QString typeString() const;
+        QString filterTypeString() const;
         QString ergSubTypeString() const;
 
         double cp() const;

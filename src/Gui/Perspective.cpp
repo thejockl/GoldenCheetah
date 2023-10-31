@@ -1910,6 +1910,7 @@ AddPerspectiveDialog::AddPerspectiveDialog(QWidget *parent, Context *context, QS
         trainSwitch->addItem(tr("Slope Workout"), Perspective::Slope);
         trainSwitch->addItem(tr("Video Workout"), Perspective::Video);
         trainSwitch->addItem(tr("Map Workout"), Perspective::Map);
+        trainSwitch->addItem(tr("Heartrate Workout"), Perspective::Hr);
         trainSwitch->setCurrentIndex(trainswitch);
         form->addRow(new QLabel(tr("Switch for")), trainSwitch);
     }

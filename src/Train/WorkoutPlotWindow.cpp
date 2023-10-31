@@ -40,12 +40,16 @@ WorkoutPlotWindow::WorkoutPlotWindow(Context *context) :
 
     connect(context, SIGNAL(setNow(long)), this, SLOT(setNow(long)));
     connect(context, SIGNAL(ergFileSelected(ErgFile*)), this, SLOT(ergFileSelected(ErgFile*)));
+    connect(context, SIGNAL(codeWorkoutSelected(QString)), this, SLOT(codeWorkoutSelected(QString)));
     connect(context, SIGNAL(telemetryUpdate(RealtimeData)), ergPlot, SLOT(performancePlot(RealtimeData)));
     connect(context, SIGNAL(start()), ergPlot, SLOT(start()));
     connect(context, SIGNAL(configChanged(qint32)), this, SLOT(configChanged(qint32)));
 
     // Initil setup based on currently selected workout
     ergFileSelected(context->currentErgFile());
+    if (! context->codeWorkoutTitle.isEmpty()) {
+        codeWorkoutSelected(context->codeWorkoutTitle);
+    }
 }
 
 void
@@ -58,6 +62,19 @@ WorkoutPlotWindow::ergFileSelected(ErgFile *f)
     ergPlot->setData(f);
     ergPlot->replot();
 }
+
+
+void
+WorkoutPlotWindow::codeWorkoutSelected
+(QString title)
+{
+    if (! title.isEmpty()) {
+        setProperty("subtitle", title);
+    } else {
+        setProperty("subtitle", "");
+    }
+}
+
 
 void
 WorkoutPlotWindow::setNow(long now)

@@ -83,7 +83,7 @@
 #include "Library.h"
 
 TrainSidebar::TrainSidebar(Context *context) : GcWindow(context), context(context),
-    bicycle(context)
+    bicycle(context), trainHrController()
 {
     // Athlete
     FTP=285; // default to 285 if zones are not set
@@ -880,27 +880,24 @@ TrainSidebar::workoutTreeWidgetSelectionChanged()
         workoutInfo->ergFileSelected(&efb);
     }
 
-    // is it the auto mode?
-    if (filename == "//1") {
-        // ergo mode
+    if (filename.startsWith("//")) {
         codeWorkoutKey = filename;
         codeWorkoutTitle = workoutTitle;
-        context->notifyErgFileSelected(NULL);
-        ergFileQueryAdapter.setErgFile(NULL);
-        mode = ErgFileFormat::erg;
+        context->notifyErgFileSelected(nullptr);
+        ergFileQueryAdapter.setErgFile(nullptr);
+        context->notifyCodeWorkoutSelected(workoutTitle);
+        if (filename == "//1") {
+            // ergo mode
+            mode = ErgFileFormat::erg;
+        } else if (filename == "//2") {
+            // slope mode
+            mode = ErgFileFormat::crs;
+        } else if (filename == "//3") {
+            // HR mode
+            mode = ErgFileFormat::hr;
+        }
         setLabels();
         clearStatusFlags(RT_WORKOUT);
-        //ergPlot->setVisible(false);
-    } else if (filename == "//2") {
-        // slope mode
-        codeWorkoutKey = filename;
-        codeWorkoutTitle = workoutTitle;
-        context->notifyErgFileSelected(NULL);
-        ergFileQueryAdapter.setErgFile(NULL);
-        mode = ErgFileFormat::crs;
-        setLabels();
-        clearStatusFlags(RT_WORKOUT);
-        //ergPlot->setVisible(false);
     } else {
         // workout mode
         codeWorkoutKey = QString();
@@ -909,7 +906,6 @@ TrainSidebar::workoutTreeWidgetSelectionChanged()
         mode = ergFile->mode();
 
         if (ergFile->isValid()) {
-
             setStatusFlags(RT_WORKOUT);
 
             // success! we have a load file
@@ -951,7 +947,7 @@ TrainSidebar::workoutTreeWidgetSelectionChanged()
     }
 
     // set the device to the right mode
-    if (mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc) {
+    if (mode == ErgFileFormat::hr || mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc) {
         setStatusFlags(RT_MODE_ERGO);
         clearStatusFlags(RT_MODE_SPIN);
 
@@ -979,7 +975,9 @@ TrainSidebar::workoutTreeWidgetSelectionChanged()
 
         Perspective::switchenum want=Perspective::None;
         if (mediafile != "") want=Perspective::Video; // if media file selected
-        else want = (mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc) ? Perspective::Erg : Perspective::Slope; // mode always known
+        else if (mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc) want = Perspective::Erg;
+        else if (mode == ErgFileFormat::hr) want = Perspective::Hr;
+        else want = Perspective::Slope;
         if (want == Perspective::Slope && ergFileQueryAdapter.hasGPS()) want=Perspective::Map; // Map without Video
 
         // if the current perspective allows automatic switching,
@@ -1395,6 +1393,8 @@ void TrainSidebar::Start()       // when start button is pressed
 
         // START!
         load = 100;
+        trainHrController.setTargetHr(120); // TODO: Set minhr, maxhr, cp
+        trainHrController.setCp(FTP);
         slope = 0.0;
 
         // Reset Speed Simulation
@@ -1402,7 +1402,7 @@ void TrainSidebar::Start()       // when start button is pressed
 
         maintainLapDistanceState();
 
-        if (mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc) {
+        if (mode == ErgFileFormat::erg || mode == ErgFileFormat::mrc || mode == ErgFileFormat::hr) {
             setStatusFlags(RT_MODE_ERGO);
             clearStatusFlags(RT_MODE_SPIN);
             foreach(int dev, activeDevices) Devices[dev].controller->setMode(RT_MODE_ERGO);
@@ -1585,6 +1585,7 @@ void TrainSidebar::Stop(int deviceStatus)        // when stop button is pressed
     //}
 
     load = 0;
+    trainHrController.reset();
     slope = 0.0;
 
     if (status & RT_RECORDING) {
@@ -2134,6 +2135,10 @@ void TrainSidebar::guiUpdate()           // refreshes the telemetry
 
             rtData.setVirtualSpeed(vs);
 
+            if (mode == ErgFileFormat::hr) {
+                rtData.setTargetHr(trainHrController.getTargetHr());
+            }
+
             // W'bal on the fly
             // using Dave Waterworth's reformulation
             double TAU = appsettings->cvalue(context->athlete->cyclist, GC_WBALTAU, 300).toInt();
@@ -2307,7 +2312,21 @@ void TrainSidebar::loadUpdate()
     load_msecs += load_period.restart();
 
     if (status&RT_MODE_ERGO) {
-        if (context->currentErgFile()) {
+        if (mode == ErgFileFormat::hr) {
+            RealtimeData rtData;
+            rtData.setLap(displayWorkoutLap);
+            rtData.mode = mode;
+            int hr = -1;
+            foreach(int dev, activeDevices) {
+                RealtimeData local = rtData;
+                Devices[dev].controller->getRealtimeData(local);
+                if (local.getHr() > 0) {
+                    hr = local.getHr();
+                    break;
+                }
+            }
+            load = trainHrController.getLoad(hr, load, load_msecs);
+        } else if (context->currentErgFile()) {
             load = ergFileQueryAdapter.wattsAt(load_msecs, curLap);
 
             if (displayWorkoutLap != curLap)
@@ -2859,7 +2878,8 @@ void TrainSidebar::Higher()
         adjustIntensity(lastAppliedIntensity+5);
 
     } else {
-        if (status&RT_MODE_ERGO) load += 5;
+        if (mode == ErgFileFormat::hr) trainHrController.incTargetHr(5);
+        else if (status&RT_MODE_ERGO) load += 5;
         else slope += 0.1;
 
         if (load >1500) load = 1500;
@@ -2885,7 +2905,8 @@ void TrainSidebar::Lower()
 
     } else {
 
-        if (status&RT_MODE_ERGO) load -= 5;
+        if (mode == ErgFileFormat::hr) trainHrController.decTargetHr(5);
+        else if (status&RT_MODE_ERGO) load -= 5;
         else slope -= 0.1;
 
         if (load <0) load = 0;

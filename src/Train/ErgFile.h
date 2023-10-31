@@ -43,11 +43,13 @@
 #define END      3
 #define TEXTS    4
 
+#if 0
 // is this in .erg or .mrc format?
 #define ERG     1
 #define MRC     2
 #define CRS     3
 #define ERG2    4
+#endif
 
 class ErgFilePoint
 {

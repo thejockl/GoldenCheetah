@@ -46,6 +46,7 @@ class WorkoutPlotWindow : public GcChartWindow
         // trap signals
         void setNow(long now);
         void ergFileSelected(ErgFile *);
+        void codeWorkoutSelected(QString title);
         void configChanged(qint32);
 
     private:

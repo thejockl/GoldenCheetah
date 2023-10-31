@@ -41,6 +41,7 @@ RealtimeData::RealtimeData()
     trainerConfigRequired = false;
     trainerBrakeFault = false;
     memset(spinScan, 0, 24);
+    targetHr = 0.0;
 }
 
 void RealtimeData::setName(char *name)
@@ -450,6 +451,9 @@ double RealtimeData::value(DataSeries series) const
     case FeO2: return feo2;
         break;
 
+    case TargetHr: return targetHr;
+        break;
+
     case None:
     default:
         return 0;
@@ -522,6 +526,7 @@ const QList<RealtimeData::DataSeries> &RealtimeData::listDataSeries()
         seriesList << Altitude;
         seriesList << RouteDistance;
         seriesList << DistanceRemaining;
+        seriesList << TargetHr;
     }
     return seriesList;
 }
@@ -698,6 +703,9 @@ QString RealtimeData::seriesName(DataSeries series)
 
     case FeO2: return tr("Fraction O2 Expired");
         break;
+
+    case TargetHr: return tr("Target Heartrate");
+        break;
     }
 }
 
@@ -739,6 +747,9 @@ double RealtimeData::getAltitude() const { return altitude; }
 void RealtimeData::setLatitude(double d) { latitude = d; }
 void RealtimeData::setLongitude(double d) { longitude = d; }
 void RealtimeData::setAltitude(double d) { altitude = d; }
+
+void RealtimeData::setTargetHr(double d) { targetHr = d; }
+double RealtimeData::getTargetHr() const { return targetHr; }
 
 void RealtimeData::setRf(double rf) { this->rf = rf; }
 void RealtimeData::setRMV(double rmv) { this->rmv = rmv; }

@@ -169,26 +169,42 @@ DialWindow::telemetryUpdate(const RealtimeData &rtData)
                 displayValue = sum/(average*5);
         }
 
-        // if we have a target load and erg mode then red background if not on target...
-        if (series == RealtimeData::Watts && (rtData.mode == ErgFileFormat::erg || rtData.mode == ErgFileFormat::mrc) && rtData.getLoad() > 0) {
-
+        // if we have
+        // * a target load and erg mode
+        // * a target heartrate and hr mode
+        // then red background if not on target...
+        if (   (rtData.mode == ErgFileFormat::hr || rtData.mode == ErgFileFormat::erg || rtData.mode == ErgFileFormat::mrc)
+            && (   series == RealtimeData::Watts
+                || series == RealtimeData::HeartRate)
+            && rtData.getLoad() > 0) {
+            double v = 0;
             // background for power, if we have a target load
             double load=rtData.getLoad();
-            QColor color = GColor(CTRAINPLOTBACKGROUND);
             QColor foreground = GColor(CPOWER);
-
-            if (displayValue < (load*0.95f) || displayValue > (load * 1.05)) {
-                color = displayValue < load ? QColor(Qt::blue) : QColor(Qt::red);
-                foreground = QColor(Qt::white);
+            QColor color = GColor(CTRAINPLOTBACKGROUND);
+            if (series == RealtimeData::Watts) {
+                if (rtData.getLoad() > 0) {
+                    v = rtData.getLoad();
+                }
+                foreground = GColor(CPOWER);
+            } else if (series == RealtimeData::HeartRate) {
+                if (rtData.getTargetHr() > 0) {
+                    v = rtData.getTargetHr();
+                }
+                foreground = GColor(CHEARTRATE);
             }
 
+            if (v > 0 && (displayValue < (v * 0.95f) || displayValue > (v * 1.05))) {
+                // background, if we have a target
+                color = displayValue < v ? QColor(Qt::blue) : QColor(Qt::red);
+                foreground = QColor(Qt::white);
+            }
             // set color
             setProperty("color", background);
             QString sh = QString("QLabel { background: %1; color: %2; }")
                                 .arg(color.name())
                                 .arg(foreground.name());
             valueLabel->setStyleSheet(sh);
-
         } else if (series == RealtimeData::Watts && rtData.getLoad() <= 0) {
 
             // reset if load is zero, we've ended the workout
@@ -482,7 +498,7 @@ DialWindow::telemetryUpdate(const RealtimeData &rtData)
         break;
 
     case RealtimeData::Load:
-        if (rtData.mode == ErgFileFormat::erg || rtData.mode == ErgFileFormat::mrc) {
+        if (rtData.mode == ErgFileFormat::hr || rtData.mode == ErgFileFormat::erg || rtData.mode == ErgFileFormat::mrc) {
             value = rtData.getLoad();
             valueLabel->setText(QString("%1").arg(round(value)));
         } else {
@@ -660,6 +676,7 @@ void DialWindow::seriesChanged()
     case RealtimeData::HeartRate:
     case RealtimeData::AvgHeartRate:
     case RealtimeData::AvgHeartRateLap:
+    case RealtimeData::TargetHr:
             foreground = GColor(CHEARTRATE);
             break;
 

@@ -195,3 +195,12 @@ Context::notifyConfigChanged(qint32 state)
     QApplication::restoreOverrideCursor();
 }
 
+
+void
+Context::notifyCodeWorkoutSelected
+(QString title)
+{
+    notifyErgFileSelected(0);
+    codeWorkoutTitle = title;
+    emit codeWorkoutSelected(title);
+}
