@@ -162,6 +162,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     LodCurve->setSamples(lodData);
     LodCurve->attach(this);
     LodCurve->setBaseline(-1000);
+    LodCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     LodCurve->setYAxis(QwtPlot::yLeft);
 
     // load curve is blue for time and grey for gradient
@@ -178,6 +179,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     predict.setAlpha(200);
     QPen wbalPen = QPen(predict, 2.0); // predict darker...
     wbalCurvePredict->setPen(wbalPen);
+    wbalCurvePredict->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     wbalCurvePredict->setVisible(true);
 
     wbalCurve = new QwtPlotCurve("W'bal Actual");
@@ -185,6 +187,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     wbalCurve->setYAxis(QwtAxisId(QwtAxis::yRight, 3));
     QPen wbalPenA = QPen(GColor(CWBAL), 1.0); // actual lighter
     wbalCurve->setPen(wbalPenA);
+    wbalCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     wbalData = new CurveData;
     wbalCurve->setSamples(wbalData->x(), wbalData->y(), wbalData->count());
 
@@ -208,6 +211,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     wattsCurve->setPen(wattspen);
     wattsCurve->attach(this);
     wattsCurve->setYAxis(QwtPlot::yLeft);
+    wattsCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     // dgr wattsCurve->setPaintAttribute(QwtPlotCurve::PaintFiltered);
     wattsData = new CurveData;
     wattsCurve->setSamples(wattsData->x(), wattsData->y(), wattsData->count());
@@ -218,6 +222,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     hrCurve->setPen(hrpen);
     hrCurve->attach(this);
     hrCurve->setYAxis(QwtPlot::yRight);
+    hrCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     hrData = new CurveData;
     hrCurve->setSamples(hrData->x(), hrData->y(), hrData->count());
 
@@ -227,6 +232,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     cadCurve->setPen(cadpen);
     cadCurve->attach(this);
     cadCurve->setYAxis(QwtPlot::yRight);
+    cadCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     cadData = new CurveData;
     cadCurve->setSamples(cadData->x(), cadData->y(), cadData->count());
 
@@ -236,6 +242,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     speedCurve->setPen(speedpen);
     speedCurve->attach(this);
     speedCurve->setYAxis(QwtAxisId(QwtAxis::yRight,2).id);
+    speedCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     speedData = new CurveData;
     speedCurve->setSamples(speedData->x(), speedData->y(), speedData->count());
 
@@ -262,6 +269,7 @@ ErgFilePlot::ErgFilePlot(Context *context) : context(context)
     NowCurve->setSamples(nowData);
     NowCurve->attach(this);
     NowCurve->setYAxis(QwtPlot::yLeft);
+    NowCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
     bydist = false;
     ergFile = NULL;
