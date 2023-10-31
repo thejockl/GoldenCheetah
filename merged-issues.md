@@ -31,4 +31,8 @@
 * https://gt.soschee.net/sport/GoldenCheetahDev/issues/70
   * Added support for OSM in the Heatmap; only proposing the currently filtered activities
 * https://gt.soschee.net/sport/GoldenCheetahDev/issues/71
-  * Workout around for the Breeze QStyle-Bug (https://bugs.kde.org/show_bug.cgi?id=473735)
+  * Workaround for the Breeze QStyle-Bug (https://bugs.kde.org/show_bug.cgi?id=473735)
+* https://gt.soschee.net/sport/GoldenCheetahDev/issues/74
+  * Enabled antialiasing for ErgFilePlot
+* https://gt.soschee.net/sport/GoldenCheetahDev/issues/17
+  * New: HR-based workout
