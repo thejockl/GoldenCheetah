@@ -34,9 +34,6 @@
 #include <qwt_series_data.h>
 #include <qwt_compat.h>
 
-static double inline max(double a, double b) { if (a > b) return a; else return b; }
-static double inline min(double a, double b) { if (a < b) return a; else return b; }
-
 
 SmallPlotPicker::SmallPlotPicker(QWidget *canvas) : QwtPlotPicker(canvas)
 {
@@ -106,7 +103,7 @@ SmallPlotPicker::trackerText(const QPoint &point) const
 }
 
 
-SmallPlot::SmallPlot(QWidget *parent) : QwtPlot(parent), d_mrk(NULL), smooth(30), allowSelect(false)
+SmallPlot::SmallPlot(QWidget *parent) : QwtPlot(parent), d_mrk(NULL), smooth(30), tracking(false)
 {
     setCanvasBackground(GColor(CPLOTBACKGROUND));
     static_cast<QwtPlotCanvas*>(canvas())->setFrameStyle(QFrame::NoFrame);
@@ -170,9 +167,9 @@ struct DataPoint {
 };
 
 void
-SmallPlot::enableAllowSelect()
+SmallPlot::enableTracking()
 {
-    allowSelect = true;
+    tracking = true;
     QwtPlotPicker *picker = new SmallPlotPicker(canvas());
     picker->setTrackerMode(QwtPlotPicker::ActiveOnly);
     picker->setStateMachine(new QwtPickerTrackerMachine());
@@ -271,11 +268,11 @@ SmallPlot::setYMax()
     QString ylabel = "";
     QString y1label = "";
     if (wattsCurve->isVisible()) {
-        ymax = max(ymax, wattsCurve->maxYValue());
+        ymax = std::max(ymax, wattsCurve->maxYValue());
         ylabel += QString((ylabel == "") ? "" : " / ") + tr("Watts");
     }
     if (hrCurve->isVisible()) {
-        ymax = max(ymax, hrCurve->maxYValue());
+        ymax = std::max(ymax, hrCurve->maxYValue());
         ylabel += QString((ylabel == "") ? "" : " / ") + tr("BPM");
     }
     if (altCurve->isVisible()) {
@@ -285,8 +282,8 @@ SmallPlot::setYMax()
         for (size_t i = 0; i < size; ++i) {
             double nextY = altCurve->data()->sample(i).y();
             if (nextY > 0.0) {
-                curMinY = min(curMinY, nextY);
-                curMaxY = max(curMaxY, nextY);
+                curMinY = std::min(curMinY, nextY);
+                curMaxY = std::max(curMaxY, nextY);
             }
         }
         y1min = curMinY;
@@ -324,9 +321,9 @@ SmallPlot::setAxisTitle(QwtAxisId axis, QString label)
 
 
 bool
-SmallPlot::hasAllowSelect() const
+SmallPlot::hasTracking() const
 {
-    return allowSelect;
+    return tracking;
 }
 
 void
@@ -349,9 +346,9 @@ SmallPlot::setData(RideFile *ride)
     arrayLength = 0;
     foreach (const RideFilePoint *point, ride->dataPoints()) {
         timeArray[arrayLength]  = point->secs;
-        wattsArray[arrayLength] = max(0, point->watts);
-        hrArray[arrayLength]    = max(0, point->hr);
-        altArray[arrayLength]    = max(0, point->alt);
+        wattsArray[arrayLength] = std::max(0., point->watts);
+        hrArray[arrayLength]    = std::max(0., point->hr);
+        altArray[arrayLength]   = std::max(0., point->alt);
         interArray[arrayLength] = point->interval;
         ++arrayLength;
     }

@@ -38,8 +38,8 @@ class SmallPlot : public QwtPlot
         SmallPlot(QWidget *parent=0);
 
 
-        void enableAllowSelect();
-        bool hasAllowSelect() const;
+        void enableTracking();
+        bool hasTracking() const;
         int smoothing() const { return smooth; }
         void setData(RideItem *rideItem);
         void setData(RideFile *rideFile);
@@ -79,7 +79,7 @@ class SmallPlot : public QwtPlot
         QVector<int> interArray;
 
         int smooth;
-        bool allowSelect;
+        bool tracking;
 
     protected slots:
 

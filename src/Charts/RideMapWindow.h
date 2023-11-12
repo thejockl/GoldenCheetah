@@ -50,10 +50,9 @@ class SmallPlot;
 
 
 struct PositionItem {
-    PositionItem(double lat, double lng, bool inMotion = true): lat(lat), lng(lng), inMotion(inMotion) {}
+    PositionItem(double lat, double lng): lat(lat), lng(lng) {}
 
     double lat, lng;
-    bool inMotion;
 };
 
 
@@ -182,6 +181,7 @@ class RideMapWindow : public GcChartWindow
         void hideRouteLineOpacityChanged(int value);
         void showIntervalsChanged(int value);
         void osmCustomTSURLEditingFinished();
+        void osmGrayValueChanged(int value);
 
 
         void forceReplot();
@@ -209,6 +209,8 @@ class RideMapWindow : public GcChartWindow
         QCheckBox* hideShadedZonesCk, * hideYellowLineCk, * hideRouteLineOpacityCk;
         QLabel *osmTSTitle, *osmTSLabel, *osmTSUrlLabel;
         QLineEdit *osmTSUrl;
+        QLabel *osmGrayLabel;
+        QSlider *osmGraySlider;
 
         QLineEdit *gkey;
         QLabel *gkeylabel;
@@ -227,7 +229,7 @@ class RideMapWindow : public GcChartWindow
         bool firstShow;
         IntervalSummaryWindow *overlayIntervals;
 
-        QVector<PositionItem> positionItems;
+        QList<PositionItem> positionItems;
 
         QString osmTileServerUrlDefault;
 
@@ -250,6 +252,7 @@ class RideMapWindow : public GcChartWindow
 
         void setCustomTSWidgetVisible(bool value);
         void setTileServerUrlForTileType(int x);
+        void setGrayscaleForTileType(int x);
 };
 
 #endif
