@@ -27,7 +27,7 @@ jobs:
           qmake6 -r ${{ github.workspace }}
       - name: Build
         run: |
-          export MAKEFLAGS="-j $(nproc) --output-sync=target"; cd ${{ github.workspace }}; make check
+          export QT_QPA_PLATFORM=minimal; export MAKEFLAGS="-j $(nproc) --output-sync=target"; cd ${{ github.workspace }}; make check
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
