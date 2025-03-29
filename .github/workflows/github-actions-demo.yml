@@ -5,8 +5,8 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Qt6
-        run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev qt6-l10n-tools
+      - name: Install Qt6 and other dependencies
+        run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev qt6-l10n-tools libgsl-dev
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
