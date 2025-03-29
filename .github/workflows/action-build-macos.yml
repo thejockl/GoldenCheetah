@@ -22,11 +22,9 @@ jobs:
 #            bison
       - name: Bison after
         run: >
+          export PATH="/opt/homebrew/opt/bison/bin:$PATH;
           bison --version;
           which bison
-      - name: Bison with path
-        run: >
-          /opt/homebrew/bin/bison --version
 #      - name: Check out repository code
 #        uses: actions/checkout@v4
 #      - name: Prepare Qwt Config
