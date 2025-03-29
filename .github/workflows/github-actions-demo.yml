@@ -24,6 +24,8 @@ jobs:
             qt6-l10n-tools \
             libgsl-dev \
             libsamplerate0-dev \
+            libusb-1.0-0-dev \
+            libical-dev \
             libfuse2
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -48,7 +50,7 @@ jobs:
           export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make
-      - name: Run unittests
+      - name: Run Unittests
         run: >
           export QT_QPA_PLATFORM=minimal;
           export MAKEFLAGS="-j $(nproc) --output-sync=target";

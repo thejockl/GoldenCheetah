@@ -147,7 +147,7 @@ QMAKE_MOVE = cp
 # ICAL_LIBS    = $${ICAL_INSTALL}/lib/libical.a
 # You may override the INCLUDE and LIB files if you like.
 # You *must* define ICAL_INSTALL to use this feature.
-#JK#ICAL_INSTALL = /usr/lib
+ICAL_INSTALL = /usr/lib
 #ICAL_INCLUDE = 
 #ICAL_LIBS    = /usr/lib/x86_64-linux-gnu/libical.a -licui18n -licuuc
 
@@ -171,10 +171,10 @@ QMAKE_MOVE = cp
 #     ttps://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/
 # You may override the INCLUDE and LIB files if you like.
 # You *must* define LIBUSB_INSTALL to use this feature.
-#JK#LIBUSB_INSTALL = /usr
+LIBUSB_INSTALL = /usr
 #LIBUSB_INCLUDE = 
 #LIBUSB_LIBS    = 
-#JK#LIBUSB_USE_V_1 = true # don't use on Windows
+LIBUSB_USE_V_1 = true # don't use on Windows
 
 # if you want video playback on training mode then
 # download and install vlc (videolan) from
@@ -194,7 +194,7 @@ QMAKE_MOVE = cp
 # VLC_LIBS    = -lvlc
 # You may override the INCLUDE and LIB files if you like.
 # You *must* define VLC_INSTALL to use this feature.
-#JK#VLC_INSTALL = /usr
+#VLC_INSTALL = /usr
 #VLC_INCLUDE = 
 #VLC_LIBS    = 
 
@@ -264,10 +264,11 @@ DEFINES += GC_WANT_ROBOT
 #DEFINES += GC_NOKIA_CLIENT_SECRET=\\\"xxxxxxxxxxxxxxx\\\"
 
 # What video playback do you want?
-DEFINES += GC_VIDEO_NONE             # dont add any video playback support
+#DEFINES += GC_VIDEO_NONE             # dont add any video playback support
 #DEFINES += GC_VIDEO_QUICKTIME       # mac only and the default
 #DEFINES += GC_VIDEO_QT5             # use QT5 qvideowidget if QT > 5.2.1
-#JK#DEFINES += GC_VIDEO_VLC             # use VideoLan library needs VLC_INSTALL defined above
+DEFINES += GC_VIDEO_QT6
+#DEFINES += GC_VIDEO_VLC             # use VideoLan library needs VLC_INSTALL defined above
 #DEFINES += GC_VIDEO_AV              # use AV Foundation on Mac now QTKit is deprecated
 
 
