@@ -71,7 +71,6 @@ jobs:
       - name: Build
         run: >
           export QT_QPA_PLATFORM=minimal;
-          export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make check
       - name: Publish GoldenCheetah binary
