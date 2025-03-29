@@ -6,26 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Qt6
-        run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev
+        run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v4
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: Test cd
-        run: |
-          cd ${{ github.workspace }}/qwt
-      - name: Print current directory
-        run: |
-          pwd
-      - name: cd test v2
-        run: |
-          cd
-      - name: Print current directory
-        run: |
-          pwd
       - name: Prepare Qwt
         run: |
           cd ${{ github.workspace }}/qwt; cp qwtconfig.pri.in qwtconfig.pri
