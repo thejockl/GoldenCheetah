@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} for GoldenCheetah
 on: [push]
 jobs:
   Build-Linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Qt6 and other dependencies
         run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev qt6-l10n-tools libgsl-dev libfuse2
