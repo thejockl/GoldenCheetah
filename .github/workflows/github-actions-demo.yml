@@ -56,10 +56,10 @@ jobs:
           export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make check
-      - name: Publish GoldenCheetah binary
+      - name: Publish GoldenCheetah Binary
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah
+          name: GoldenCheetah Binary
           path: src/GoldenCheetah
           retention-days: 5
       - name: Create GoldenCheetah AppImage
@@ -72,13 +72,13 @@ jobs:
           name: GoldenCheetah AppImage
           path: src/GoldenCheetah_*.AppImage
           retention-days: 5
-      - name: Publish GoldenCheetah versionfile
+      - name: Publish GoldenCheetah Versionfile
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah versionfile
+          name: GoldenCheetah Versionfile
           path: src/GCversionLinux.txt
           retention-days: 5
-      - run: echo "This job's status is ${{ job.status }}."
+      - run: echo "This job's status is ${{ job.status }}"
 #  Build-MacOS-arm64:
 #    runs-on: macos-latest
 #    steps:
