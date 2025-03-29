@@ -6,7 +6,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Install Qt6 and other dependencies
-        run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev qt6-l10n-tools libgsl-dev libfuse2
+        run: >
+          sudo apt install
+            qt6-base-dev
+            qt6-charts-dev
+            qt6-multimedia-dev
+            qt6-serialport-dev
+            qt6-svg-dev
+            qt6-webchannel-dev
+            qt6-webengine-dev
+            qt6-positioning-dev
+            qt6-connectivity-dev
+            qt6-5compat-dev
+            qt6-l10n-tools
+            libgsl-dev
+            libfuse2
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
@@ -53,7 +67,7 @@ jobs:
       - name: Publish GoldenCheetah versionfile
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah AppImage
+          name: GoldenCheetah versionfile
           path: src/GCversionLinux.txt
           retention-days: 5
       - run: echo "This job's status is ${{ job.status }}."
