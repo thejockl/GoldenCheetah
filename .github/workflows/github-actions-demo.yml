@@ -43,7 +43,7 @@ jobs:
       - name: Create GoldenCheetah AppImage
         run: >
           cd ${{ github.workspace }};
-          ./travis/after_success.sh
+          ./travis/linux/after_success.sh
       - name: Publish GoldenCheetah AppImage
         uses: actions/upload-artifact@v4
         with:
