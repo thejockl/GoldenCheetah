@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
 jobs:
   Build-MacOS-arm64:
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event"
       - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub"
@@ -36,6 +36,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GoldenCheetah
-          path: src/GoldenCheetah
+          path: src/GoldenCheetah.app/Contents/MacOS/GoldenCheetah
           retention-days: 5
       - run: echo "This job's status is ${{ job.status }}."
