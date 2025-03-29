@@ -5,6 +5,9 @@ jobs:
   Build-Linux:
     runs-on: ubuntu-24.04
     steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event"
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}"
       - name: Install Qt6 and other dependencies
         run: >
           sudo apt install \
@@ -20,10 +23,8 @@ jobs:
             qt6-5compat-dev \
             qt6-l10n-tools \
             libgsl-dev \
+            libsamplerate0-dev \
             libfuse2
-      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v4
       - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
@@ -43,6 +44,11 @@ jobs:
         run: |
           qmake6 -r ${{ github.workspace }}
       - name: Build
+        run: >
+          export MAKEFLAGS="-j $(nproc) --output-sync=target";
+          cd ${{ github.workspace }};
+          make
+      - name: Run unittests
         run: >
           export QT_QPA_PLATFORM=minimal;
           export MAKEFLAGS="-j $(nproc) --output-sync=target";

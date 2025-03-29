@@ -207,9 +207,9 @@ QMAKE_MOVE = cp
 # some modifications in the build process to build with MSVC2015 
 # Code is available at: http://www.mega-nerd.com/SRC/
 #
-#SAMPLERATE_INSTALL = /usr/local
-#SAMPLERATE_INCLUDE = /usr/local/include
-#SAMPLERATE_LIBS = /usr/local/lib/libsamplerate.a
+SAMPLERATE_INSTALL = /usr
+SAMPLERATE_INCLUDE = /usr/include
+SAMPLERATE_LIBS = -lsamplerate
 
 # If your system has PKG_CONFIG, QT can use this to get dependent libraries.
 # Add the names of libraries with PKG_CONFIG information.
