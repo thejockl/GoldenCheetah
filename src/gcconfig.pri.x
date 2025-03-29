@@ -5,8 +5,8 @@
 #APP_NAME = 
 
 # We recommend a debug build for development and a release build for deployment
-CONFIG += debug
-#CONFIG += release
+#CONFIG += debug
+CONFIG += release
 
 # #jk# DISARM asserts
 #DEFINES += NDEBUG
@@ -75,8 +75,8 @@ UI_DIR = ./.ui
 
 # We use g++ on all platforms so switch on auto vectorization amongst other
 # things to speed up looping over ride file points
-#QMAKE_CXXFLAGS += -O3
-QMAKE_CXXFLAGS += -O0
+QMAKE_CXXFLAGS += -O3
+#QMAKE_CXXFLAGS += -O0
 
 # Let us know where flex and bison are installed.
 # You may need to specify the full path if things don't work.
