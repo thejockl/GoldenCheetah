@@ -75,7 +75,7 @@ UI_DIR = ./.ui
 
 # We use g++ on all platforms so switch on auto vectorization amongst other
 # things to speed up looping over ride file points
-QMAKE_CXXFLAGS += -O3
+#QMAKE_CXXFLAGS += -O3
 #QMAKE_CXXFLAGS += -O0
 
 # Let us know where flex and bison are installed.
