@@ -15,13 +15,18 @@ jobs:
       - name: Install Qt6 and other dependencies
         run: >
           brew install \
-            qt@6 \
-            gsl \
             bison
+#          brew install \
+#            qt@6 \
+#            gsl \
+#            bison
       - name: Bison after
         run: >
           bison --version;
           which bison
+      - name: Bison with path
+        run: >
+          /opt/homebrew/bin/bison --version
 #      - name: Check out repository code
 #        uses: actions/checkout@v4
 #      - name: Prepare Qwt Config
