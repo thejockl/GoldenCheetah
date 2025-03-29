@@ -7,22 +7,31 @@ jobs:
     steps:
       - name: Install Qt6 and other dependencies
         run: sudo apt install qt6-5compat-dev qt6-base-dev qt6-charts-dev qt6-multimedia-dev qt6-serialport-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-positioning-dev qt6-connectivity-dev qt6-l10n-tools libgsl-dev
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - name: Prepare Qwt
+      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+      - name: Prepare Qwt Config
         run: |
           cd ${{ github.workspace }}/qwt; cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
         run: |
           cd ${{ github.workspace }}/src; cp gcconfig.pri.x gcconfig.pri
+      - name: Enable Unittests
+        run: |
+          cd ${{ github.workspace }}/unittests; cp unittests.pri.in unittests.pri
       - name: Generate Makefiles
         run: |
           qmake6 -r ${{ github.workspace }}
       - name: Build
         run: |
-          export MAKEFLAGS="-j $(nproc) --output-sync=target"; cd ${{ github.workspace }}; make
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          export MAKEFLAGS="-j $(nproc) --output-sync=target"; cd ${{ github.workspace }}; make check
+      - name: Publish GoldenCheetah binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldenCheetah
+          path: src/GoldenCheetah
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
