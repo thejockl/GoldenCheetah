@@ -1,8 +1,8 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: GoldenCheetah GitHub Actions
+run-name: ${{ github.actor }} for GoldenCheetah
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  Build-Linux:
     runs-on: ubuntu-latest
     steps:
       - name: Install Qt6 and other dependencies
@@ -14,20 +14,66 @@ jobs:
         uses: actions/checkout@v4
       - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
       - name: Prepare Qwt Config
-        run: |
-          cd ${{ github.workspace }}/qwt; cp qwtconfig.pri.in qwtconfig.pri
+        run: >
+          cd ${{ github.workspace }}/qwt;
+          cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
-        run: |
-          cd ${{ github.workspace }}/src; cp gcconfig.pri.x gcconfig.pri
+        run: >
+          cd ${{ github.workspace }}/src;
+          cp gcconfig.pri.linux gcconfig.pri
       - name: Enable Unittests
-        run: |
-          cd ${{ github.workspace }}/unittests; cp unittests.pri.in unittests.pri
+        run: >
+          cd ${{ github.workspace }}/unittests;
+          cp unittests.pri.in unittests.pri
       - name: Generate Makefiles
         run: |
           qmake6 -r ${{ github.workspace }}
       - name: Build
+        run: >
+          export QT_QPA_PLATFORM=minimal;
+          export MAKEFLAGS="-j $(nproc) --output-sync=target";
+          cd ${{ github.workspace }};
+          make check
+      - name: Publish GoldenCheetah binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldenCheetah
+          path: src/GoldenCheetah
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
+  Build-MacOS-arm64:
+    runs-on: macos-latest
+    steps:
+      - name: Install Qt6 and other dependencies
         run: |
-          export QT_QPA_PLATFORM=minimal; export MAKEFLAGS="-j $(nproc) --output-sync=target"; cd ${{ github.workspace }}; make check
+          sudo brew install qt@6 gsl
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+      - name: Prepare Qwt Config
+        run: >
+          cd ${{ github.workspace }}/qwt;
+          cp qwtconfig.pri.in qwtconfig.pri
+      - name: Prepare GoldenCheetah Config
+        run: >
+          cd ${{ github.workspace }}/src;
+          cp gcconfig.pri.mac gcconfig.pri
+      - name: Enable Unittests
+        run: >
+          cd ${{ github.workspace }}/unittests;
+          cp unittests.pri.in unittests.pri
+      - name: Generate Makefiles
+        run: |
+          qmake6 -r ${{ github.workspace }}
+      - name: Build
+        run: >
+          export QT_QPA_PLATFORM=minimal;
+          export MAKEFLAGS="-j $(nproc) --output-sync=target";
+          cd ${{ github.workspace }};
+          make check
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
