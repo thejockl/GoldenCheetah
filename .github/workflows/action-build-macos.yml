@@ -1,0 +1,40 @@
+name: GoldenCheetah GitHub Actions
+run-name: ${{ github.actor }} for GoldenCheetah
+on: [push]
+jobs:
+  Build-MacOS-arm64:
+    runs-on: macos-latest
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event"
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}"
+      - name: Install Qt6 and other dependencies
+        run: >
+          brew install \
+            qt@6 \
+            gsl
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Prepare Qwt Config
+        run: >
+          cd ${{ github.workspace }}/qwt;
+          cp qwtconfig.pri.in qwtconfig.pri
+      - name: Prepare GoldenCheetah Config
+        run: >
+          cd ${{ github.workspace }}/src;
+          cp gcconfig.pri.mac gcconfig.pri
+      - name: Generate Makefiles
+        run: |
+          qmake6 -r ${{ github.workspace }}
+      - name: Build
+        run: >
+          export QT_QPA_PLATFORM=minimal;
+          cd ${{ github.workspace }};
+          make
+      - name: Publish GoldenCheetah binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldenCheetah
+          path: src/GoldenCheetah
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
