@@ -1,5 +1,5 @@
 name: GoldenCheetah GitHub Actions
-run-name: ${{ github.actor }} for GoldenCheetah
+run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
 jobs:
   Build-MacOS-arm64:
