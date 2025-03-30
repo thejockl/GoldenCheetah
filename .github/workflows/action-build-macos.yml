@@ -6,9 +6,9 @@ jobs:
     runs-on: macos-14
     steps:
       - run: >
-        echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
-          "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
-          "on ${{ runner.os }}"
+          echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
+            "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
+            "on ${{ runner.os }}"
       - name: Install Qt6 and other dependencies
         run: >
           brew install \
