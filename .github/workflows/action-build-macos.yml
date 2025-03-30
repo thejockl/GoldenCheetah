@@ -38,4 +38,4 @@ jobs:
 #          name: GoldenCheetah
 #          path: src/GoldenCheetah.app
 #          retention-days: 5
-#     - run: echo "Finished with status ${{ job.status }}"
+     - run: echo "Finished with status ${{ job.status }}"
