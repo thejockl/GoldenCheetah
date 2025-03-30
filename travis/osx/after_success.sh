@@ -13,7 +13,7 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 # cp -R ../VLC/plugins GoldenCheetah.app/Contents/Frameworks
 
 # This is a hack to include libicudata.*.dylib, not handled by macdployqt[fix]
-cp /usr/local/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Frameworks
+cp /opt/homebrew/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Frameworks
 
 # # Copy python framework and change permissions to fix paths
 # cp -R /Library/Frameworks/Python.framework GoldenCheetah.app/Contents/Frameworks
@@ -34,20 +34,20 @@ cp /usr/local/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Framew
 # Initial deployment using macdeployqt
 macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
 
-# Fix QtWebEngineProcess due to bug in macdeployqt from homebrew
-if [ ! -f GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess ]; then
-    cp -Rafv /usr/local/Cellar/qt/5.15.?/lib/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app/Contents GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app
-fi
-
-pushd GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS
-for LIB in QtGui QtCore QtWebEngineCore QtQuick QtWebChannel QtNetwork QtPositioning QtQmlModels QtQml
-do
-    OLD_PATH=`otool -L QtWebEngineProcess | grep ${LIB}.framework | cut -f 1 -d ' '`
-    NEW_PATH="@loader_path/../../../../../../../${LIB}.framework/${LIB}"
-    echo ${OLD_PATH} ${NEW_PATH}
-    install_name_tool -change ${OLD_PATH} ${NEW_PATH} QtWebEngineProcess
-done
-popd
+# # Fix QtWebEngineProcess due to bug in macdeployqt from homebrew
+# if [ ! -f GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess ]; then
+#     cp -Rafv /usr/local/Cellar/qt/5.15.?/lib/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app/Contents GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app
+# fi
+#
+# pushd GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS
+# for LIB in QtGui QtCore QtWebEngineCore QtQuick QtWebChannel QtNetwork QtPositioning QtQmlModels QtQml
+# do
+#     OLD_PATH=`otool -L QtWebEngineProcess | grep ${LIB}.framework | cut -f 1 -d ' '`
+#     NEW_PATH="@loader_path/../../../../../../../${LIB}.framework/${LIB}"
+#     echo ${OLD_PATH} ${NEW_PATH}
+#     install_name_tool -change ${OLD_PATH} ${NEW_PATH} QtWebEngineProcess
+# done
+# popd
 
 # # Final deployment to generate dmg (may take longer than 10' without output)
 # python3.7 -m pip install travis-wait-improved

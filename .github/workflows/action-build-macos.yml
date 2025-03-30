@@ -28,8 +28,11 @@ jobs:
           mkdir ${{ github.workspace }}/src/GoldenCheetah.app;
           cd ${{ github.workspace }}/src/GoldenCheetah.app;
           unzip ../GoldenCheetah.zip;
-          cd ${{ github.workspace }}/src;
-          tree;
+          cd ${{ github.workspace }}/src
+      - name: Add dependencies
+        run: >
+          cd ${{ github.workspace }};
+          ./travis/osx/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
