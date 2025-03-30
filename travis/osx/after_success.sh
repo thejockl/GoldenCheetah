@@ -13,7 +13,6 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 # cp -R ../VLC/plugins GoldenCheetah.app/Contents/Frameworks
 
 # This is a hack to include libicudata.*.dylib, not handled by macdployqt[fix]
-#tree /opt/homebrew/opt/icu4c/lib
 cp /opt/homebrew/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Frameworks
 
 # # Copy python framework and change permissions to fix paths
@@ -31,6 +30,8 @@ cp /opt/homebrew/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Fra
 # # Add mandatory Python dependencies
 # rm -r GoldenCheetah.app/Contents/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages
 # cp -R ../site-packages GoldenCheetah.app/Contents/Frameworks/Python.framework/Versions/3.7/lib/python3.7
+
+install_name_tool -id '@rpath/QtGui.framework/Versions/A/QtGui' QtGui
 
 # Initial deployment using macdeployqt
 macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
