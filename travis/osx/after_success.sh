@@ -12,8 +12,8 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 # cp ../VLC/lib/libvlc.dylib ../VLC/lib/libvlccore.dylib GoldenCheetah.app/Contents/Frameworks
 # cp -R ../VLC/plugins GoldenCheetah.app/Contents/Frameworks
 
-# This is a hack to include libicudata.*.dylib, not handled by macdployqt[fix]
-cp /opt/homebrew/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Frameworks
+# # This is a hack to include libicudata.*.dylib, not handled by macdployqt[fix]
+# cp /opt/homebrew/opt/icu4c/lib/libicudata.*.dylib GoldenCheetah.app/Contents/Frameworks
 
 # # Copy python framework and change permissions to fix paths
 # cp -R /Library/Frameworks/Python.framework GoldenCheetah.app/Contents/Frameworks
