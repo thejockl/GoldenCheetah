@@ -18,7 +18,13 @@ jobs:
             tree
       - name: What is in /opt/homebrew
         run: |
-          tree /opt/homebrew
+          tree /opt/homebrew > /opt/files
+      - name: Publish homebrew-files
+        uses: actions/upload-artifact@v4
+        with:
+          name: homebrew
+          path: /opt/files
+          retention-days: 5
 #      - name: Check out repository code
 #        uses: actions/checkout@v4
 #      - name: Prepare Qwt Config
