@@ -32,7 +32,6 @@ jobs:
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
-          tree /opt/homebrew/opt/icu4c;
           ./travis/osx/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
