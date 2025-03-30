@@ -15,6 +15,10 @@ jobs:
             qt@6 \
             gsl \
             bison
+      - name: Install dev-stuff
+        run: >
+          brew install \
+            tree
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Dummy Build
@@ -24,6 +28,8 @@ jobs:
           mkdir ${{ github.workspace }}/src/GoldenCheetah.app
           cd ${{ github.workspace }}/src/GoldenCheetah.app
           unzip ../GoldenCheetah.zip
+          cd ${{ github.workspace }}/src
+          tree
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
