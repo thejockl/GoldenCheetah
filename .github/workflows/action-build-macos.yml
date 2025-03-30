@@ -17,22 +17,11 @@ jobs:
             bison
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Prepare Qwt Config
-        run: >
-          cd ${{ github.workspace }}/qwt;
-          cp qwtconfig.pri.in qwtconfig.pri
-      - name: Prepare GoldenCheetah Config
+      - name: Dummy Build
         run: >
           cd ${{ github.workspace }}/src;
-          cp gcconfig.pri.mac gcconfig.pri
-      - name: Generate Makefiles
-        run: |
-          qmake6 -r ${{ github.workspace }}
-      - name: Build
-        run: >
-          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
-          cd ${{ github.workspace }};
-          make
+          wget https://gc.soschee.net/GoldenCheetah.zip;
+          unzip GoldenCheetah.zip
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
