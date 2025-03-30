@@ -21,3 +21,10 @@ jobs:
         run: >
           cd ${{ github.workspace }}/qwt;
           cp qwtconfig.pri.in qwtconfig.pri
+      - name: Prepare GoldenCheetah Config
+        run: >
+          cd ${{ github.workspace }}/src;
+          cp gcconfig.pri.mac gcconfig.pri
+      - name: Generate Makefiles
+        run: |
+          qmake6 -r ${{ github.workspace }}
