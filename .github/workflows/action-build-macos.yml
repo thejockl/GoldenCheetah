@@ -26,7 +26,8 @@ jobs:
           cd ${{ github.workspace }}/src;
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
-        run: qmake6 -r ${{ github.workspace }}
+        run: |
+          qmake6 -r ${{ github.workspace }}
 #      - name: Build
 #        run: >
 #          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
