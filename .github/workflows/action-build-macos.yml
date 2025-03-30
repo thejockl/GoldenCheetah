@@ -16,12 +16,9 @@ jobs:
         run: >
           brew install \
             tree
-      - name: What is in /usr/local/cellar
+      - name: What is in /opt/homebrew
         run: |
-          tree /usr/local/cellar
-      - name: What is in /usr/local/opt
-        run: |
-          tree /usr/local/opt
+          tree /opt/homebrew
 #      - name: Check out repository code
 #        uses: actions/checkout@v4
 #      - name: Prepare Qwt Config
