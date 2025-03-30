@@ -19,9 +19,11 @@ jobs:
         uses: actions/checkout@v4
       - name: Dummy Build
         run: >
-          cd ${{ github.workspace }}/src;
+          cd ${{ github.workspace }}/src
           wget https://gc.soschee.net/GoldenCheetah.zip;
-          unzip GoldenCheetah.zip
+          mkdir ${{ github.workspace }}/src/GoldenCheetah.app
+          cd ${{ github.workspace }}/src/GoldenCheetah.app
+          unzip ../GoldenCheetah.zip
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
