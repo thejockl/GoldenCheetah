@@ -5,37 +5,37 @@ jobs:
   Build-MacOS-arm64:
     runs-on: macos-14
     steps:
-#      - run: >
-#          echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
-#            "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
-#            "on ${{ runner.os }}"
-      - name: Install Qt6 and other dependencies
-        run: >
-          brew install \
-            qt@6 \
-            gsl \
-            bison
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Prepare Qwt Config
-        run: >
-          cd ${{ github.workspace }}/qwt;
-          cp qwtconfig.pri.in qwtconfig.pri
-      - name: Prepare GoldenCheetah Config
-        run: >
-          cd ${{ github.workspace }}/src;
-          cp gcconfig.pri.mac gcconfig.pri
-      - name: Generate Makefiles
-        run: qmake6 -r ${{ github.workspace }}
-      - name: Build
-        run: >
-          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
-          cd ${{ github.workspace }};
-          make
-      - name: Publish GoldenCheetah binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: GoldenCheetah
-          path: src/GoldenCheetah.app
-          retention-days: 5
-     - run: echo "Finished with status ${{ job.status }}"
+      - run: >
+          echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
+            "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
+            "on ${{ runner.os }}"
+#      - name: Install Qt6 and other dependencies
+#        run: >
+#          brew install \
+#            qt@6 \
+#            gsl \
+#            bison
+#      - name: Check out repository code
+#        uses: actions/checkout@v4
+#      - name: Prepare Qwt Config
+#        run: >
+#          cd ${{ github.workspace }}/qwt;
+#          cp qwtconfig.pri.in qwtconfig.pri
+#      - name: Prepare GoldenCheetah Config
+#        run: >
+#          cd ${{ github.workspace }}/src;
+#          cp gcconfig.pri.mac gcconfig.pri
+#      - name: Generate Makefiles
+#        run: qmake6 -r ${{ github.workspace }}
+#      - name: Build
+#        run: >
+#          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
+#          cd ${{ github.workspace }};
+#          make
+#      - name: Publish GoldenCheetah binary
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: GoldenCheetah
+#          path: src/GoldenCheetah.app
+#          retention-days: 5
+#     - run: echo "Finished with status ${{ job.status }}"
