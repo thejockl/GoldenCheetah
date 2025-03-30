@@ -12,19 +12,6 @@ jobs:
             qt@6 \
             gsl \
             bison
-#      - name: Temporary stuff
-#        run: >
-#          brew install \
-#            tree
-#      - name: What is in /opt/homebrew
-#        run: |
-#          tree /opt/homebrew > /tmp/files
-#      - name: Publish homebrew-files
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: homebrew
-#          path: /tmp/files
-#          retention-days: 5
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -36,8 +23,7 @@ jobs:
           cd ${{ github.workspace }}/src;
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
-        run: |
-          qmake6 -r ${{ github.workspace }}
+        run: qmake6 -r ${{ github.workspace }}
       - name: Build
         run: >
           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
