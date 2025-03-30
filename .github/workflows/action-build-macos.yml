@@ -21,22 +21,3 @@ jobs:
         run: >
           cd ${{ github.workspace }}/qwt;
           cp qwtconfig.pri.in qwtconfig.pri
-#      - name: Prepare GoldenCheetah Config
-#        run: >
-#          cd ${{ github.workspace }}/src;
-#          cp gcconfig.pri.mac gcconfig.pri
-#      - name: Generate Makefiles
-#        run: |
-#          qmake6 -r ${{ github.workspace }}
-#      - name: Build
-#        run: >
-#          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
-#          cd ${{ github.workspace }};
-#          make
-#      - name: Publish GoldenCheetah binary
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: GoldenCheetah
-#          path: src/GoldenCheetah.app
-#          retention-days: 5
-     - run: echo "Finished with status ${{ job.status }}"
