@@ -47,8 +47,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GoldenCheetah
-          path: src/GoldenCheetah.app/Contents/MacOS/GoldenCheetah
-          path: |
-            src/GoldenCheetah.app
+          path: src/GoldenCheetah.app
           retention-days: 5
      - run: echo "Finished with status ${{ job.status }}"
