@@ -40,6 +40,10 @@ macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents
 
 tree GoldenCheetah.app
 
+cp -Lr GoldenCheetah.app GoldenCheetah-nolinks.app
+
+tree GoldenCheetah-nolinks.app
+
 # # Fix QtWebEngineProcess due to bug in macdeployqt from homebrew
 # if [ ! -f GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess ]; then
 #     cp -Rafv /usr/local/Cellar/qt/5.15.?/lib/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app/Contents GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Versions/5/Helpers/QtWebEngineProcess.app
