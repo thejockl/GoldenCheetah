@@ -8,6 +8,8 @@ cat GCversionMacOS.txt
 echo "About to create dmg file and fix up"
 mkdir GoldenCheetah.app/Contents/Frameworks
 
+install_name_tool -add_rpath "$(brew --prefix qt)/lib" libqcocoa.dylib
+
 # # Add VLC dylibs and plugins
 # cp ../VLC/lib/libvlc.dylib ../VLC/lib/libvlccore.dylib GoldenCheetah.app/Contents/Frameworks
 # cp -R ../VLC/plugins GoldenCheetah.app/Contents/Frameworks
@@ -40,9 +42,6 @@ macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents
 
 tree GoldenCheetah.app
 
-cp -Lr GoldenCheetah.app GoldenCheetah-nolinks.app
-
-tree GoldenCheetah-nolinks.app
 
 # # Fix QtWebEngineProcess due to bug in macdeployqt from homebrew
 # if [ ! -f GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess ]; then
