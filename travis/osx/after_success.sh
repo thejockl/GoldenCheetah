@@ -31,12 +31,14 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 # rm -r GoldenCheetah.app/Contents/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages
 # cp -R ../site-packages GoldenCheetah.app/Contents/Frameworks/Python.framework/Versions/3.7/lib/python3.7
 
-pushd /opt/homebrew/Frameworks/QtGui.framework
-install_name_tool -id '@rpath/QtGui.framework/Versions/A/QtGui' QtGui
-popd
+# pushd /opt/homebrew/Frameworks/QtGui.framework
+# install_name_tool -id '@rpath/QtGui.framework/Versions/A/QtGui' QtGui
+# popd
 
 # Initial deployment using macdeployqt
 macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
+
+tree GoldenCheetah.app
 
 # # Fix QtWebEngineProcess due to bug in macdeployqt from homebrew
 # if [ ! -f GoldenCheetah.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess ]; then
