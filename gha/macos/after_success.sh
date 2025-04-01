@@ -10,10 +10,13 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 
 # install_name_tool -add_rpath "$(brew --prefix qt)/lib" libqcocoa.dylib
 
+export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_FALLBACK_LIBRARY_PATH
+
 # Initial deployment using macdeployqt
 macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
 
 tree GoldenCheetah.app
+otool -l GoldenCheetah.app
 
 echo "Renaming dmg file to branch and build number ready for deploy"
 export FINAL_NAME=GoldenCheetah_v3.7_x64.dmg
