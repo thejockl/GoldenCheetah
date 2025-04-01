@@ -4,12 +4,11 @@ set -ev
 cd src
 echo "Checking GoldenCheetah.app can execute"
 GoldenCheetah.app/Contents/MacOS/GoldenCheetah --version 2> GCversionMacOS.txt
-cat GCversionMacOS.txt
 
 echo "About to create dmg file and fix up"
 mkdir GoldenCheetah.app/Contents/Frameworks
 
-install_name_tool -add_rpath "$(brew --prefix qt)/lib" libqcocoa.dylib
+# install_name_tool -add_rpath "$(brew --prefix qt)/lib" libqcocoa.dylib
 
 # Initial deployment using macdeployqt
 macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
