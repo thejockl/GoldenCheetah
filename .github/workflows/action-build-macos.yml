@@ -32,7 +32,7 @@ jobs:
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
-          ./travis/osx/after_success.sh
+          ./gha/macos/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
