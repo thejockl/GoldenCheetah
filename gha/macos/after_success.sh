@@ -13,7 +13,7 @@ mkdir GoldenCheetah.app/Contents/Frameworks
 export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_FALLBACK_LIBRARY_PATH
 
 # Initial deployment using macdeployqt
-macdeployqt6 GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
+macdeployqt GoldenCheetah.app -verbose=2 -executable=GoldenCheetah.app/Contents/MacOS/GoldenCheetah
 
 tree GoldenCheetah.app
 otool -l GoldenCheetah.app

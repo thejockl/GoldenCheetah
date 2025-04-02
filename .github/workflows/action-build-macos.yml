@@ -53,8 +53,7 @@ jobs:
       - name: Install Qt6 and other dependencies
         run: >
           brew install \
-            qt@6 \
-            qt-webengine \
+            qt@5 \
             gsl \
             bison
       - name: Check out repository code
@@ -69,7 +68,7 @@ jobs:
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
         run: |
-          qmake6 -r ${{ github.workspace }}
+          qmake -r ${{ github.workspace }}
       - name: Build
         run: >
           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
