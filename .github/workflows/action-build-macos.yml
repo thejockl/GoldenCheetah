@@ -5,6 +5,7 @@ jobs:
   Build-MacOS-arm64:
     runs-on: macos-14
     steps:
+      - run: false
       - run: >
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
             "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
@@ -55,7 +56,10 @@ jobs:
           brew install \
             qt@5 \
             gsl \
-            bison
+            bison \
+            tree
+      - name: tree
+        run: tree /opt/homebrew; false
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
