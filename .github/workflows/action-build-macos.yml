@@ -17,11 +17,22 @@ jobs:
             bison
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name:  Build
-        run: >
-          cd ${{ github.workspace }};
-          qmake6 -r .;
-          make
+      - name: Prepare Qwt Config
+         run: >
+           cd ${{ github.workspace }}/qwt;
+           cp qwtconfig.pri.in qwtconfig.pri
+       - name: Prepare GoldenCheetah Config
+         run: >
+           cd ${{ github.workspace }}/src;
+           cp gcconfig.pri.mac gcconfig.pri
+       - name: Generate Makefiles
+         run: |
+           qmake6 -r ${{ github.workspace }}
+       - name: Build
+         run: >
+           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
+           cd ${{ github.workspace }};
+           make
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
@@ -47,11 +58,22 @@ jobs:
             bison
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name:  Build
-        run: >
-          cd ${{ github.workspace }};
-          qmake6 -r .;
-          make
+      - name: Prepare Qwt Config
+         run: >
+           cd ${{ github.workspace }}/qwt;
+           cp qwtconfig.pri.in qwtconfig.pri
+       - name: Prepare GoldenCheetah Config
+         run: >
+           cd ${{ github.workspace }}/src;
+           cp gcconfig.pri.mac gcconfig.pri
+       - name: Generate Makefiles
+         run: |
+           qmake6 -r ${{ github.workspace }}
+       - name: Build
+         run: >
+           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
+           cd ${{ github.workspace }};
+           make
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
