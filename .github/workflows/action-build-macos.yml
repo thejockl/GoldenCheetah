@@ -56,10 +56,7 @@ jobs:
           brew install \
             qt@5 \
             gsl \
-            bison \
-            tree
-      - name: tree
-        run: tree /usr/local; false
+            bison
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -72,7 +69,7 @@ jobs:
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
         run: >
-          export PATH=/opt/homebrew/opt/qt/bin:$PATH;
+          export PATH="/usr/local/opt/qt@5/bin:$PATH;
           qmake -r ${{ github.workspace }}
       - name: Build
         run: >
