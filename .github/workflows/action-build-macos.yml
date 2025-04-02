@@ -50,7 +50,7 @@ jobs:
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
             "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
             "on ${{ runner.os }}"
-      - name: Install Qt6 and other dependencies
+      - name: Install Qt5 and other dependencies
         run: >
           brew install \
             qt@5 \
@@ -67,8 +67,9 @@ jobs:
           cd ${{ github.workspace }}/src;
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
-        run: |
-          qmake5 -r ${{ github.workspace }}
+        run: >
+          export PATH=/opt/homebrew/opt/qt/bin:$PATH;
+          qmake -r ${{ github.workspace }}
       - name: Build
         run: >
           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
