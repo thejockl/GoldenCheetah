@@ -59,7 +59,7 @@ jobs:
             bison \
             tree
       - name: tree
-        run: tree /opt/homebrew; false
+        run: tree /usr/local; false
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
