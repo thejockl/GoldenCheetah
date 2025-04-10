@@ -57,7 +57,7 @@ jobs:
             qt@5 \
             gsl \
             bison
-      -name: Infos
+      - name: Infos
         run: >
           brew --prefix qt; \
           tree $(brew --prefix qt)
