@@ -60,10 +60,8 @@ jobs:
             tree
       - name: Infos
         run: |
-          brew --prefix qt;
           brew --prefix qt@5;
-          export PATH="$(brew --prefix tree)/bin:$PATH";
-          tree $(brew --prefix qt)
+          tree $(brew --prefix qt@5)
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -76,7 +74,7 @@ jobs:
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
         run: >
-          export PATH="$(brew --prefix qt)/bin:$PATH";
+          export PATH="$(brew --prefix qt@5)/bin:$PATH";
           qmake -r ${{ github.workspace }}
       - name: Build
         run: >
