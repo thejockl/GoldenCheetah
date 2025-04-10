@@ -4,8 +4,8 @@ on: [push]
 jobs:
   Build-MacOS-arm64:
     runs-on: macos-14
+    if: false
     steps:
-      - run: false
       - run: >
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
             "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
@@ -57,6 +57,10 @@ jobs:
             qt@5 \
             gsl \
             bison
+      -name: Infos
+        run: >
+        brew --prefix qt; \
+        tree $(brew --prefix qt)
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
