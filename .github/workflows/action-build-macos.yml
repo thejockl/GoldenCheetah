@@ -61,6 +61,8 @@ jobs:
       - name: Infos
         run: >
           brew --prefix qt; \
+          brew --prefix qt@5; \
+          export PATH="$(brew --prefix tree)/bin:$PATH";
           tree $(brew --prefix qt)
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -74,11 +76,11 @@ jobs:
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
         run: >
-          export PATH="/usr/local/opt/qt@5/bin:$PATH";
+          export PATH="$(brew --prefix qt)/bin:$PATH";
           qmake -r ${{ github.workspace }}
       - name: Build
         run: >
-          export PATH="/usr/local/opt/bison/bin:$PATH";
+          export PATH="$(brew --prefix bison)/bin:$PATH";
           export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make
