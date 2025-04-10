@@ -59,8 +59,8 @@ jobs:
             bison
       -name: Infos
         run: >
-        brew --prefix qt; \
-        tree $(brew --prefix qt)
+          brew --prefix qt; \
+          tree $(brew --prefix qt)
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
