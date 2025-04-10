@@ -36,8 +36,7 @@ jobs:
           cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
         run: >
-          cd ${{ github.workspace }}/src;
-          cp gcconfig.pri.linux gcconfig.pri
+          cp ${{ github.workspace }}/gha/linux/gcconfig.pri ${{ github.workspace }}/src/gcconfig.pri
       - name: Enable Unittests
         run: >
           cd ${{ github.workspace }}/unittests;

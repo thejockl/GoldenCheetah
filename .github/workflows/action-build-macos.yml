@@ -24,8 +24,7 @@ jobs:
           cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
         run: >
-          cd ${{ github.workspace }}/src;
-          cp gcconfig.pri.mac gcconfig.pri
+          cp ${{ github.workspace }}/gha/macos-arm64/gcconfig.pri ${{ github.workspace }}/gcconfig.pri
       - name: Generate Makefiles
         run: |
           qmake6 -r ${{ github.workspace }}
@@ -69,8 +68,7 @@ jobs:
           cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
         run: >
-          cd ${{ github.workspace }}/src;
-          cp gcconfig.pri.mac gcconfig.pri
+          cp ${{ github.workspace }}/gha/macos-intel/gcconfig.pri ${{ github.workspace }}/gcconfig.pri
       - name: Generate Makefiles
         run: |
           export PATH="$(brew --prefix qt@5)/bin:$PATH"
