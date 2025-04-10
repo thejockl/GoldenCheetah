@@ -72,8 +72,10 @@ jobs:
           cd ${{ github.workspace }}/src;
           cp gcconfig.pri.mac gcconfig.pri
       - name: Generate Makefiles
-        run: >
-          export PATH="$(brew --prefix qt@5)/bin:$PATH";
+        run: |
+          export PATH="$(brew --prefix qt@5)/bin:$PATH"
+          export LDFLAGS="-L$(brew --prefix gsl)/lib:$LDFLAGS"
+          export CPPFLAGS="-I$(brew --prefix gsl)/include:$CPPFLAGS"
           qmake -r ${{ github.workspace }}
       - name: Build
         run: >
