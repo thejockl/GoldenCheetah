@@ -74,14 +74,10 @@ jobs:
       - name: Generate Makefiles
         run: |
           export PATH="$(brew --prefix qt@5)/bin:$PATH"
-          export LDFLAGS="-L$(brew --prefix gsl)/lib:$LDFLAGS"
-          export CPPFLAGS="-I$(brew --prefix gsl)/include:$CPPFLAGS"
           qmake -r ${{ github.workspace }}
       - name: Build
         run: >
           export PATH="$(brew --prefix bison)/bin:$PATH";
-          export LDFLAGS="-L$(brew --prefix gsl)/lib:$LDFLAGS"
-          export CPPFLAGS="-I$(brew --prefix gsl)/include:$CPPFLAGS"
           export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make
