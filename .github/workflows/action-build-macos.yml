@@ -60,8 +60,8 @@ jobs:
             tree
       - name: Infos
         run: |
-          brew --prefix qt@5;
-          tree $(brew --prefix qt@5)
+          tree $(brew --prefix gsl)
+          false
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
