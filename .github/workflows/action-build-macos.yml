@@ -61,7 +61,6 @@ jobs:
       - name: Infos
         run: |
           tree $(brew --prefix gsl)
-          false
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -79,6 +78,8 @@ jobs:
       - name: Build
         run: >
           export PATH="$(brew --prefix bison)/bin:$PATH";
+          export LDFLAGS="-L$(brew --prefix gsl)/lib:$LDFLAGS"
+          export CPPFLAGS="-I$(brew --prefix gsl)/include:$CPPFLAGS"
           export MAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make
