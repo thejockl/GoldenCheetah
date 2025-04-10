@@ -78,9 +78,13 @@ jobs:
       - name: Build
         run: >
           export PATH="$(brew --prefix bison)/bin:$PATH";
-          export XMAKEFLAGS="-j $(nproc) --output-sync=target";
           cd ${{ github.workspace }};
           make
+      - name: Publish GoldenCheetah binary (#1)
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldenCheetah-intel-buildonly
+          path: src/GoldenCheetah.app
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
