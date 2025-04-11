@@ -101,8 +101,8 @@ jobs:
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah_v3.7_x64.dmg
-          path: src/GoldenCheetah_v3.7_x64.dmg
+          name: GoldenCheetah_v3.7_x64-gha.dmg
+          path: src/GoldenCheetah_v3.7_x64-gha.dmg
       - name: Publish GoldenCheetah version
         uses: actions/upload-artifact@v4
         with:
