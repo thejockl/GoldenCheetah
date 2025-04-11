@@ -53,7 +53,7 @@ jobs:
       - name: Install Qt6 and other dependencies
         run: >
           brew install \
-            qt@6 \
+            qt@5 \
             gsl \
             bison \
             tree
