@@ -58,9 +58,6 @@ jobs:
             gsl \
             bison \
             tree
-      - name: Infos
-        run: |
-          tree $(brew --prefix gsl)
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -91,13 +88,15 @@ jobs:
         run: |
           export PATH="$(brew --prefix tree)/bin:$PATH"
           mkdir ${{ github.workspace }}/src/GoldenCheetah.app
-          cd ${{ github.workspace }}/src/GoldenCheetah.app
+          cd ${{ github.workspace }}/src
           wget https://gc.soschee.net/GoldenCheetah-intel-buildonly.zip
-          unzip GoldenCheetah-intel-buildonly.zip
+          cd ${{ github.workspace }}/src/GoldenCheetah.app
+          unzip ../GoldenCheetah-intel-buildonly.zip
           tree .
       - name: Add dependencies
-        run: >
-          cd ${{ github.workspace }};
+        run: |
+          export PATH="$(brew --prefix qt@5)/bin:$PATH"
+          cd ${{ github.workspace }}
           ./gha/macos-intel/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
