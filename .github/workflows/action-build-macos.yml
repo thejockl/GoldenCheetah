@@ -1,4 +1,4 @@
-name: GoldenCheetah GitHub Actions
+name: GoldenCheetah GitHub Actions (MacOS)
 run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
 jobs:
