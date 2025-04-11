@@ -51,7 +51,7 @@ jobs:
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
             "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
             "on ${{ runner.os }}"
-      - name: Install Qt6 and other dependencies
+      - name: Install Qt5 and other dependencies
         run: >
           brew install \
             qt@5 \
@@ -101,6 +101,11 @@ jobs:
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah-intel
-          path: src/GoldenCheetah.app
+          name: GoldenCheetah_v3.7_x64.dmg
+          path: src/GoldenCheetah_v3.7_x64.dmg
+      - name: Publish GoldenCheetah version
+        uses: actions/upload-artifact@v4
+        with:
+          name: GCversionMacOS.txt
+          path: src/GCversionMacOS.txt
       - run: echo "Finished with status ${{ job.status }}"
