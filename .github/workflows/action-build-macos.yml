@@ -46,6 +46,8 @@ jobs:
       - run: echo "Finished with status ${{ job.status }}"
   Build-MacOS-intel:
     runs-on: macos-13
+    env:
+      FINAL_NAME: GoldenCheetah_v3.7_x64-gha.dmg
     steps:
       - run: >
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
@@ -101,8 +103,8 @@ jobs:
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah_v3.7_x64-gha.dmg
-          path: src/GoldenCheetah_v3.7_x64-gha.dmg
+          name: $FINAL_NAME
+          path: src/$FINAL_NAME
       - name: Publish GoldenCheetah version
         uses: actions/upload-artifact@v4
         with:
