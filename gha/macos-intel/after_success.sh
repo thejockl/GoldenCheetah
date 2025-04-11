@@ -23,6 +23,6 @@ echo "SHA256 hash of $FINAL_NAME:" >> GCversionMacOS.txt
 shasum -a 256 GoldenCheetah.dmg | cut -f 1 -d ' ' >> GCversionMacOS.txt
 cat GCversionMacOS.txt
 
-# ls -l $FINAL_NAME
+ls -l GoldenCheetah.dmg
 
 exit

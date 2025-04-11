@@ -97,6 +97,8 @@ jobs:
           tree .
       - name: Add dependencies
         run: |
+          pwd
+          echo ${{ github.workspace }}
           export PATH="$(brew --prefix qt@5)/bin:$PATH"
           cd ${{ github.workspace }}
           ./gha/macos-intel/after_success.sh
