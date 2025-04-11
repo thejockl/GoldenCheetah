@@ -29,6 +29,7 @@ jobs:
         run: |
           qmake6 -r ${{ github.workspace }}
       - name: Build
+        if: false
         run: >
           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
           cd ${{ github.workspace }};
@@ -36,7 +37,7 @@ jobs:
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
-          ./gha/macos/after_success.sh
+          ./gha/macos-arm64/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
@@ -74,19 +75,30 @@ jobs:
           export PATH="$(brew --prefix qt@5)/bin:$PATH"
           qmake -r ${{ github.workspace }}
       - name: Build
+        if: false
         run: >
           export PATH="$(brew --prefix bison)/bin:$PATH";
           cd ${{ github.workspace }};
           make
       - name: Publish GoldenCheetah binary (#1)
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: GoldenCheetah-intel-buildonly
           path: src/GoldenCheetah.app
+      - name: Pseudobuild
+        if: true
+        run: |
+          export PATH="$(brew --prefix tree)/bin:$PATH"
+          mkdir ${{ github.workspace }}/src/GoldenCheetah.app
+          cd ${{ github.workspace }}/src/GoldenCheetah.app
+          wget https://gc.soschee.net/GoldenCheetah-intel-buildonly.zip
+          unzip GoldenCheetah-intel-buildonly.zip
+          tree .
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
-          ./gha/macos/after_success.sh
+          ./gha/macos-intel/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
