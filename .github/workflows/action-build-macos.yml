@@ -105,7 +105,7 @@ jobs:
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
-          name: $FINAL_NAME
+          name: ${{ env.FINAL_NAME }}
           path: src/GoldenCheetah.dmg
       - name: Publish GoldenCheetah version
         uses: actions/upload-artifact@v4
