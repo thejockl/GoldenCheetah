@@ -15,7 +15,7 @@ jobs:
         with:
           version: 6.8.3
           host: mac
-          modules: 'qtserialport qtmultimedia qtmultimediawidgets qtwebenginecore qtwebenginewidgets qtwebchannel qtpositioning qtwebenginequick qtcore5compat qtbluetooth qtcharts'
+          modules: 'qtserialport qtmultimedia qtwebengine qtwebengine qtwebchannel qtpositioning qt5compat qtconnectivity qtcharts'
       - name: Install other dependencies
         run: >
           brew install \
