@@ -34,7 +34,6 @@ jobs:
         run: |
           qmake6 -r ${{ github.workspace }}
       - name: Build
-        if: false
         run: >
           export PATH=/opt/homebrew/opt/bison/bin:$PATH;
           cd ${{ github.workspace }};
