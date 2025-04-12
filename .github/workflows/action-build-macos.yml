@@ -2,6 +2,51 @@ name: GoldenCheetah GitHub Actions (MacOS)
 run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
 jobs:
+  Build-MacOS-arm64-aqt:
+    runs-on: macos-14
+    if: true
+    steps:
+      - run: >
+          echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
+            "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
+            "on ${{ runner.os }}"
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v4
+        version: 6.8.3
+        host: mac
+      - name: Install other dependencies
+        run: >
+          brew install \
+            gsl \
+            bison
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Prepare Qwt Config
+        run: >
+          cd ${{ github.workspace }}/qwt;
+          cp qwtconfig.pri.in qwtconfig.pri
+      - name: Prepare GoldenCheetah Config
+        run: >
+          cp ${{ github.workspace }}/gha/macos-arm64/gcconfig.pri ${{ github.workspace }}/src/gcconfig.pri
+      - name: Generate Makefiles
+        run: |
+          qmake6 -r ${{ github.workspace }}
+      - name: Build
+        if: false
+        run: >
+          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
+          cd ${{ github.workspace }};
+          make
+      - name: Add dependencies
+        run: >
+          cd ${{ github.workspace }};
+          ./gha/macos-arm64/after_success.sh
+      - name: Publish GoldenCheetah binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldenCheetah-arm64
+          path: src/GoldenCheetah.app
+      - run: echo "Finished with status ${{ job.status }}"
   Build-MacOS-arm64:
     runs-on: macos-14
     if: false
@@ -46,6 +91,7 @@ jobs:
       - run: echo "Finished with status ${{ job.status }}"
   Build-MacOS-intel:
     runs-on: macos-13
+    if: false
     env:
       FINAL_NAME: GoldenCheetah_v3.7_x64-gha.dmg
     steps:
