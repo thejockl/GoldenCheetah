@@ -10,17 +10,23 @@ jobs:
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
             "triggered by ${{ github.actor }} with ${{ github.event_name }} " \
             "on ${{ runner.os }}"
+      - name: Install other dependencies
+        run: >
+          brew install \
+            gsl \
+            bison \
+            tree
+      - name: Where is gsl
+        run: |
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          tree $(brew --prefix gsl)
+          false
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
         with:
           version: 6.8.3
           host: mac
           modules: 'qtserialport qtmultimedia qtwebengine qtwebengine qtwebchannel qtpositioning qt5compat qtconnectivity qtcharts'
-      - name: Install other dependencies
-        run: >
-          brew install \
-            gsl \
-            bison
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Prepare Qwt Config
@@ -35,7 +41,7 @@ jobs:
           qmake6 -r ${{ github.workspace }}
       - name: Build
         run: >
-          export PATH=/opt/homebrew/opt/bison/bin:$PATH;
+          export PATH="$(brew --prefix bison)/bin:$PATH";
           cd ${{ github.workspace }};
           make
       - name: Add dependencies
