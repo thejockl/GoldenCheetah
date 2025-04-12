@@ -2,7 +2,6 @@ name: GoldenCheetah GitHub Actions (MacOS)
 run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
 env:
-  GC_VERSION: v3.7
   QT_VERSION: 6.8.3
 jobs:
   Build-MacOS-arm64-aqt:
@@ -10,7 +9,7 @@ jobs:
     if: true
     env:
       ARCH: arm64
-      FINAL_NAME: GoldenCheetah_${{ env.GC_VERSION }}_${{ env.ARCH }}-aqt.dmg
+      FINAL_NAME: GoldenCheetah_v3.7_arm64-aqt.dmg
     steps:
       - run: >
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
