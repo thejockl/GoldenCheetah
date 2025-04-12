@@ -16,8 +16,8 @@ CONFIG += release
 #
 # Linux/Mac - use apt/homebrew to install and edit to your install location
 # GitHub Actions ARM64
-GSL_INCLUDES = /opt/homebrew/opt/include
-GSL_LIBS = -L/opt/homebrew/opt/lib/ -lgsl -lgslcblas -lm
+GSL_INCLUDES = /opt/homebrew/opt/gsl/include
+GSL_LIBS = -L/opt/homebrew/opt/gsl/lib/ -lgsl -lgslcblas -lm
 # GitHub Actions Intel
 #GSL_INCLUDES = /usr/local/opt/gsl/include
 #GSL_LIBS = -L/usr/local/opt/gsl/lib -lgsl -lgslcblas -lm
