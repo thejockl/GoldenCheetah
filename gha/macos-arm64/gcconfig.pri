@@ -16,11 +16,11 @@ CONFIG += release
 #
 # Linux/Mac - use apt/homebrew to install and edit to your install location
 # GitHub Actions ARM64
-#GSL_INCLUDES = /usr/include
-#GSL_LIBS = -L/opt/homebrew/lib/ -lgsl -lgslcblas -lm
+GSL_INCLUDES = /usr/include
+GSL_LIBS = -L/opt/homebrew/lib/ -lgsl -lgslcblas -lm
 # GitHub Actions Intel
-GSL_INCLUDES = /usr/local/opt/gsl/include
-GSL_LIBS = -L/usr/local/opt/gsl/lib -lgsl -lgslcblas -lm
+#GSL_INCLUDES = /usr/local/opt/gsl/include
+#GSL_LIBS = -L/usr/local/opt/gsl/lib -lgsl -lgslcblas -lm
 #
 # Windows - use vcpkg to install and edit to your install location
 #GSL_INCLUDES = c:\vcpkg\installed\x64-windows\include
