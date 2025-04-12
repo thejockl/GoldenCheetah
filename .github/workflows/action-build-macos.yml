@@ -1,10 +1,16 @@
 name: GoldenCheetah GitHub Actions (MacOS)
 run-name: ${{ github.actor }} for GoldenCheetah (MacOS)
 on: [push]
+env:
+  GC_VERSION: v3.7
+  QT_VERSION: 6.8.3
 jobs:
   Build-MacOS-arm64-aqt:
     runs-on: macos-14
     if: true
+    env:
+      ARCH: arm64
+      FINAL_NAME: GoldenCheetah_${{ env.GC_VERSION }}_${{ env.ARCH }}-aqt.dmg
     steps:
       - run: >
           echo "Building ${{ github.ref }} @ ${{ github.repository }} " \
@@ -13,7 +19,7 @@ jobs:
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
         with:
-          version: 6.8.3
+          version: ${{ env.QT_VERSION }}
           host: mac
           modules: 'qtserialport qtmultimedia qtwebengine qtwebengine qtwebchannel qtpositioning qt5compat qtconnectivity qtcharts'
       - name: Install other dependencies
@@ -29,7 +35,7 @@ jobs:
           cp qwtconfig.pri.in qwtconfig.pri
       - name: Prepare GoldenCheetah Config
         run: >
-          cp ${{ github.workspace }}/gha/macos-arm64/gcconfig.pri ${{ github.workspace }}/src/gcconfig.pri
+          cp ${{ github.workspace }}/gha/macos-${{ env.ARCH }}/gcconfig.pri ${{ github.workspace }}/src/gcconfig.pri
       - name: Generate Makefiles
         run: |
           qmake6 -r ${{ github.workspace }}
@@ -41,12 +47,17 @@ jobs:
       - name: Add dependencies
         run: >
           cd ${{ github.workspace }};
-          ./gha/macos-arm64/after_success.sh
+          ./gha/macos-${{ env.ARCH }}/after_success.sh
       - name: Publish GoldenCheetah binary
         uses: actions/upload-artifact@v4
         with:
-          name: GoldenCheetah-arm64
-          path: src/GoldenCheetah.app
+          name: ${{ env.FINAL_NAME }}
+          path: src/GoldenCheetah.dmg
+      - name: Publish GoldenCheetah version
+        uses: actions/upload-artifact@v4
+        with:
+          name: GCversionMacOS-${{ env.ARCH }}.txt
+          path: src/GCversionMacOS.txt
       - run: echo "Finished with status ${{ job.status }}"
   Build-MacOS-arm64:
     runs-on: macos-14
@@ -158,5 +169,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GCversionMacOS.txt
-          path: src/GCversionMacOS.txt
+          path: src/GCversionMacOS-x64.txt
       - run: echo "Finished with status ${{ job.status }}"
