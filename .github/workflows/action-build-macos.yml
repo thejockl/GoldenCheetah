@@ -12,8 +12,9 @@ jobs:
             "on ${{ runner.os }}"
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
-        version: 6.8.3
-        host: mac
+        with:
+          version: 6.8.3
+          host: mac
       - name: Install other dependencies
         run: >
           brew install \
