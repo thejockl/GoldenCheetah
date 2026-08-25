@@ -122,14 +122,18 @@ LiveMapWebPageWindow::LiveMapWebPageWindow(Context *context) : GcChartWindow(con
 
     // Finish initialization using current settings
     userUrl();
-    ergFileSelected(context->currentErgFile());
 }
 
 void LiveMapWebPageWindow::userUrl()
 {
-    QString url = customUrl->text();
+    if (customUrl->text().trimmed().isEmpty()) customUrl->setText("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    // If provided URL doesn't contain the required part, we add it,
+    // otherwise it is used without changes to allow inclusion of apikey.
+    QString tsReq = "/{z}/{x}/{y}.png";
+    if (!customUrl->text().contains(tsReq)) customUrl->setText(customUrl->text() + tsReq);
     view->setZoomFactor(dpiXFactor);
-    view->setUrl(QUrl(url));
+    view->setUrl(QUrl(customUrl->text()));
+    ergFileSelected(context->currentErgFile());
 }
 
 LiveMapWebPageWindow::~LiveMapWebPageWindow()
@@ -176,7 +180,6 @@ void LiveMapWebPageWindow::ergFileSelected(ErgFile* f)
             // So we create divs with the 2 methods we need to run when the document loads
             code = QString("showRoute (" + routeLatLngs + ");");
             js += ("<div><script type=\"text/javascript\">" + code + "</script></div>\n");
-            if (customUrl->text().trimmed().isEmpty()) customUrl->setText("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
             createHtml(customUrl->text(), js);
             view->page()->setHtml(currentPage);
         }
