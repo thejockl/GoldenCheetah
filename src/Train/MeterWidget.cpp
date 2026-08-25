@@ -613,6 +613,10 @@ void LiveMapWidget::initLiveMap(Context* context)
         // So we create divs with the 2 methods we need to run when the document loads
         code = QString("showRoute (" + routeLatLngs + ");");
         js += ("<div><script type=\"text/javascript\">" + code + "</script></div>\n");
+        // If provided URL doesn't contain the required part, we add it,
+        // otherwise it is used without changes to allow inclusion of apikey.
+        QString tsReq = "/{z}/{x}/{y}.png";
+        if (!m_osmURL.contains(tsReq)) m_osmURL += tsReq;
         createHtml(m_osmURL, js);
         liveMapView->page()->setHtml(currentPage);
         routeInitialized = true;
