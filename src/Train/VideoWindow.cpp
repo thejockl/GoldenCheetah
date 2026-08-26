@@ -664,12 +664,6 @@ void VideoWindow::telemetryUpdate(const RealtimeData &rtd)
             p_meterWidget->Text = QString::number((int)p_meterWidget->Value).rightJustified(p_meterWidget->textWidth);
             p_meterWidget->AltText = p_meterWidget->AltTextSuffix;
         }
-        else if (p_meterWidget->Source() == QString("VAM"))
-        {
-            p_meterWidget->Value =  rtd.getVAM();
-            p_meterWidget->Text = QString::number((int)p_meterWidget->Value).rightJustified(p_meterWidget->textWidth);
-            p_meterWidget->AltText = p_meterWidget->AltTextSuffix;
-        }
         else if (p_meterWidget->Source() == QString("Load"))
         {
             if (rtd.mode == ErgFileFormat::erg || rtd.mode == ErgFileFormat::mrc) {
@@ -743,6 +737,17 @@ void VideoWindow::telemetryUpdate(const RealtimeData &rtd)
             else
             {
                 p_meterWidget->Text = tr("");
+            }
+        }
+        else
+        {
+            for (RealtimeData::DataSeries series : RealtimeData::listDataSeries()) {
+                if (p_meterWidget->Source() == RealtimeData::seriesSymbol(series)) {
+                    p_meterWidget->Value = rtd.value(series);
+                    p_meterWidget->Text = QString::number((int)p_meterWidget->Value).rightJustified(p_meterWidget->textWidth);
+                    p_meterWidget->AltText = p_meterWidget->AltTextSuffix;
+                    break;
+                }
             }
         }
     }
