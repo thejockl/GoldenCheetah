@@ -22,6 +22,7 @@
 #include <QtGui>
 #include <QProgressBar>
 #include <QLabel>
+#include <QDialogButtonBox>
 
 #include "Context.h"
 #include "CalendarSync.h"
