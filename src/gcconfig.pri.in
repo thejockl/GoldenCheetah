@@ -52,9 +52,9 @@
 # You *must* define ICAL_INSTALL to use this feature.
 ###############################################################################
 #
-#ICAL_INSTALL = /usr
-#ICAL_INCLUDE = /usr/include
-#ICAL_LIBS    = -L/usr/lib -lical
+#ICAL_INSTALL = 
+#ICAL_INCLUDE = 
+#ICAL_LIBS    = 
 
 
 # If you have conflicts with min/max macros defined in windows.h
