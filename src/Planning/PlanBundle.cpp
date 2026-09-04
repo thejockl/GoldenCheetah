@@ -1033,7 +1033,6 @@ packDir
                                      QFileDevice::ReadGroup | QFileDevice::ExeGroup |
                                      QFileDevice::ReadOther | QFileDevice::ExeOther);
     zipWriter.addDirectory(dirName + "/");
-    qDebug() << __PRETTY_FUNCTION__ << "Added directory" << dirName;
     for (const QString &fileName : fileNames) {
         QString fullPath = workDir.filePath(fileName);
         QFile file(fullPath);
